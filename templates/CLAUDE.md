@@ -47,5 +47,5 @@ When a retro produces a new checkable rule, add a gate to that script.
 `bash scripts/setup-claude-memory.sh` once per clone to git-version it and load it
 each session. Starter rules are marked `(STARTER RULE …)` — keep or prune them.
 This system is meant to grow, but growth must stay signal: periodically run
-`/guardrails-review` (or `bash scripts/guardrails-review.sh`) to prune stale rules
+`/praxis-review` (or `bash scripts/praxis-review.sh`) to prune stale rules
 and dead gates.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# guardrails-review — hygiene check so the system's growth stays signal, not noise.
+# praxis-review — hygiene check so the system's growth stays signal, not noise.
 #
 # The discipline system is meant to GROW (each incident adds a rule/gate/memory).
 # This surfaces the sprawl that growth creates, so you can prune it:
@@ -8,7 +8,7 @@
 #   - growth stats + the list of active gates
 #
 # Read-only. It reports and proposes; it never deletes. Run:
-#   bash scripts/guardrails-review.sh
+#   bash scripts/praxis-review.sh
 set -euo pipefail
 
 MEM=".claude/memory"
@@ -53,5 +53,5 @@ done < <(grep -E '^[[:space:]]*-[[:space:]]*\[' "$IDX" 2>/dev/null | grep -oE '\
 [ "$dangling" -eq 0 ] && printf '  %s✓ none%s\n' "$GRN" "$RST"
 
 hdr "Next"
-printf '  %sReview the rules themselves for staleness with:  /guardrails-review%s\n' "$DIM" "$RST"
+printf '  %sReview the rules themselves for staleness with:  /praxis-review%s\n' "$DIM" "$RST"
 printf '  %s(this script finds structural sprawl; judgment about "still true?" is the slash command)%s\n' "$DIM" "$RST"

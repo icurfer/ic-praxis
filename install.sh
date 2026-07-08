@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 #
-# ic-guardrails installer — scaffold the discipline system INTO a project.
+# ic-praxis installer — scaffold the discipline system INTO a project.
 #
 # It only copies the template files (CLAUDE.md, docs/, scripts/, .claude/, ...)
-# into the target repo. It never leaves ic-guardrails' own repo, .git, or
+# into the target repo. It never leaves ic-praxis' own repo, .git, or
 # templates/ folder behind — so your project is not polluted.
 #
 #   # recommended — run at your project root, nothing left behind:
-#   curl -fsSL https://raw.githubusercontent.com/icurfer/ic-guardrails/main/install.sh | bash
-#   #  or:  wget -qO- https://raw.githubusercontent.com/icurfer/ic-guardrails/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
+#   #  or:  wget -qO- https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
 #
 #   # from a local clone (kept OUTSIDE your project):
-#   /path/to/ic-guardrails/install.sh /path/to/your/project
+#   /path/to/ic-praxis/install.sh /path/to/your/project
 #
 # Idempotent: never overwrites an existing file unless you pass --force.
 #
 set -euo pipefail
 
 BRANCH="main"
-TARBALL="https://codeload.github.com/icurfer/ic-guardrails/tar.gz/refs/heads/${BRANCH}"
-REPO_URL="https://github.com/icurfer/ic-guardrails.git"   # git fallback only
+TARBALL="https://codeload.github.com/icurfer/ic-praxis/tar.gz/refs/heads/${BRANCH}"
+REPO_URL="https://github.com/icurfer/ic-praxis.git"   # git fallback only
 FORCE=0
 TARGET="."
 for a in "$@"; do
@@ -41,14 +41,14 @@ if [ -n "$SELF_DIR" ] && [ -d "$SELF_DIR/templates" ]; then
 else
   TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
   if command -v curl >/dev/null 2>&1; then
-    echo "→ fetching ic-guardrails (curl)..."
+    echo "→ fetching ic-praxis (curl)..."
     curl -fsSL "$TARBALL" | tar -xz -C "$TMP"
   elif command -v wget >/dev/null 2>&1; then
-    echo "→ fetching ic-guardrails (wget)..."
+    echo "→ fetching ic-praxis (wget)..."
     wget -qO- "$TARBALL" | tar -xz -C "$TMP"
   elif command -v git >/dev/null 2>&1; then
-    echo "→ fetching ic-guardrails (git)..."
-    git clone --depth 1 "$REPO_URL" "$TMP/ic-guardrails-${BRANCH}" >/dev/null 2>&1
+    echo "→ fetching ic-praxis (git)..."
+    git clone --depth 1 "$REPO_URL" "$TMP/ic-praxis-${BRANCH}" >/dev/null 2>&1
   else
     echo "✗ need one of: curl, wget, or git" >&2; exit 1
   fi
@@ -81,5 +81,5 @@ echo "✓ scaffolded ($copied new, $skipped kept)."
 echo "Next (from the project root):"
 echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
 echo "  2) git-version the memory:         bash scripts/setup-claude-memory.sh"
-echo "  3) in Claude Code, customize:      /guardrails-init <one line about your project>"
+echo "  3) in Claude Code, customize:      /praxis-init <one line about your project>"
 echo "     (fills placeholders in CLAUDE.md + the gate, then proves the gate blocks a bad commit)"

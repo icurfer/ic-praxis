@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# check-conventions.sh — the guardrail gate.
+# check-conventions.sh — the praxis gate.
 #
 # Turns human discipline into a machine-enforced pre-commit gate. Each rule
 # below was (or should be) born from a real incident: something broke, you wrote
@@ -87,5 +87,5 @@ if [ "$fail" -ne 0 ]; then
     "$RED" "$RST" "$DIM" "$RST" >&2
   exit 1
 fi
-printf '%sguardrail gate passed.%s\n' "$GRN" "$RST" >&2
+printf '%spraxis gate passed.%s\n' "$GRN" "$RST" >&2
 exit 0

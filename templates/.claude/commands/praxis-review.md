@@ -6,7 +6,7 @@ The discipline system grows with every incident — which is the point, but grow
 without pruning becomes noise. Review it and propose a cleanup.
 
 Do this:
-1. Run `bash scripts/guardrails-review.sh` and read its output (orphan memory
+1. Run `bash scripts/praxis-review.sh` and read its output (orphan memory
    files, dangling index lines, growth stats, active gates).
 2. **Judge staleness** — read `.claude/memory/*.md` and `scripts/check-conventions.sh`.
    Flag anything that:

@@ -1,16 +1,16 @@
-# ic-guardrails
+# ic-praxis
 
 > **English** · [한국어](README.ko.md)
 
-**Guardrails for AI coding agents.** Retros become pre-commit gates — so the same mistake can't ship twice, and your project's discipline stays on the rails.
+**Praxis for AI coding agents.** Reflection becomes action — every retro turns into a pre-commit gate, so the same mistake can't ship twice and your project keeps teaching itself.
 
-Most "AI rules" setups are a `CLAUDE.md` full of good intentions that go stale in a month. `ic-guardrails` is the missing half: the rules you *write down* get *mechanically enforced* at commit time. When something breaks, you add a gate — and it stays fixed.
+Most "AI rules" setups are a `CLAUDE.md` full of good intentions that go stale in a month. `ic-praxis` is the missing half: the rules you *write down* get *mechanically enforced* at commit time. When something breaks, you add a gate — and it stays fixed.
 
-> The name: guardrails don't slow you down — they stop you from going off the road. That's what this does to a project's conventions.
+> The name: *praxis* is reflection turned into action — you learn a lesson, then you enforce it. This automates that loop for a project's conventions, so the team (and its agents) grow into solving problems once, not repeatedly.
 
 ---
 
-## Why ic-guardrails exists
+## Why ic-praxis exists
 
 It was extracted from running a real platform: a single hub repo coordinating one web frontend and ~17 backend services, each with its own deploy pipeline. At that scale, the same class of mistake kept recurring:
 
@@ -19,7 +19,7 @@ It was extracted from running a real platform: a single hub repo coordinating on
 
 Writing rules down wasn't enough. **Documents don't stop a bad commit; they only describe what a good one looks like.** The fix was one move: take every rule a machine *can* check, and enforce it at commit time. Forget the version bump? The commit is blocked, with the reason printed. Paste a secret? Blocked.
 
-That is the guardrail — each incident adds one more rail, and they stay up. This repo packages that discipline so any project can adopt it in one command.
+That is praxis — each incident becomes a rule the project enforces on itself, so it never re-learns the same lesson. This repo packages that loop so any project can adopt it in one command.
 
 ---
 
@@ -31,7 +31,7 @@ A five-axis scaffold, dropped into any repo:
 |---|---|---|
 | **1. Constitution** | `CLAUDE.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
-| **3. The guardrail gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
+| **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
 | **4. Shared memory** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | Cross-session facts, one per file, indexed — **git-versioned** so lessons survive resets and are shared with the team. Ships a few universal starter rules. |
 | **5. Verify skill** | `.claude/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts. |
 
@@ -87,15 +87,15 @@ flowchart LR
 ## Install
 
 > The installer only **copies the scaffold files into your repo**. It downloads
-> itself to a temp dir and cleans up — ic-guardrails' own repo/`.git`/`templates/`
+> itself to a temp dir and cleans up — ic-praxis' own repo/`.git`/`templates/`
 > are never left in your project. Existing files are never overwritten (use
 > `--force` to replace).
 
 **A. One-liner — run at your project root (recommended)**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/icurfer/ic-guardrails/main/install.sh | bash
-# no curl? →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-guardrails/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
+# no curl? →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
 ```
 
 Then activate the gate and git-version the memory:
@@ -109,21 +109,21 @@ bash scripts/setup-claude-memory.sh  # git-version memory + load it each session
 
 Point your agent at this repo and say:
 
-> "Scaffold ic-guardrails into this project using the curl one-liner from
-> https://github.com/icurfer/ic-guardrails (do not clone it into the project), then run /guardrails-init."
+> "Scaffold ic-praxis into this project using the curl one-liner from
+> https://github.com/icurfer/ic-praxis (do not clone it into the project), then run /praxis-init."
 
-> ⚠️ **Don't `git clone` ic-guardrails *inside* your project and run it there** — that
-> leaves an `ic-guardrails/` folder (with its own `.git`) in your repo. If you want a
+> ⚠️ **Don't `git clone` ic-praxis *inside* your project and run it there** — that
+> leaves an `ic-praxis/` folder (with its own `.git`) in your repo. If you want a
 > local copy, clone it **outside** your project and run
-> `/path/to/ic-guardrails/install.sh /path/to/your/project`.
+> `/path/to/ic-praxis/install.sh /path/to/your/project`.
 
 Then, inside Claude Code:
 
 ```
-/guardrails-init  <one line describing your project>
+/praxis-init  <one line describing your project>
 ```
 
-`/guardrails-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md` and the gate, tunes the gate to your real deploy paths — and **proves it works by making a deliberately-bad commit and showing it blocked.**
+`/praxis-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md` and the gate, tunes the gate to your real deploy paths — and **proves it works by making a deliberately-bad commit and showing it blocked.**
 
 ---
 
@@ -136,7 +136,7 @@ flowchart LR
     Q -- yes --> G["Add a gate in<br/>check-conventions.sh"]
     Q -- no --> R["Stays a written rule<br/>(agent-enforced)"]
     G --> P["🔒 Blocked at commit time<br/>— can't slip back"]
-    P -. "next incident<br/>adds one more guardrail" .-> I
+    P -. "next incident<br/>becomes one more rule" .-> I
 ```
 
 Rules that depend on human memory break again. This moves as many as possible into the gate, one incident at a time.
@@ -165,7 +165,7 @@ Add a new gate whenever a retro gives you a checkable rule. That's the whole dis
 
 They're **starters, not law.** Keep the ones that fit your team, delete the rest,
 and prune the matching lines in `.claude/memory/MEMORY.md`. The real value comes
-from the rules *your* incidents teach you — add those as you go. (`/guardrails-init`
+from the rules *your* incidents teach you — add those as you go. (`/praxis-init`
 will help you curate this on first setup.)
 
 ## Grows with you — and stays curated
@@ -175,10 +175,10 @@ That compounding is the point — but growth without curation becomes noise (sta
 rules, dead gates, an index that drifts). So it also ships the other half:
 
 ```bash
-bash scripts/guardrails-review.sh   # structural sprawl: orphan/dangling memory, growth stats
+bash scripts/praxis-review.sh   # structural sprawl: orphan/dangling memory, growth stats
 ```
 ```
-/guardrails-review                  # + judgment: prune stale rules & dead gates (proposes, you confirm)
+/praxis-review                  # + judgment: prune stale rules & dead gates (proposes, you confirm)
 ```
 
 The result is a system that **starts tiny, grows only what your incidents earn, and

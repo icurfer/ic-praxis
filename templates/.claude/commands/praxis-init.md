@@ -1,8 +1,8 @@
 ---
-description: Fill in the guardrail scaffold for THIS project (constitution, docs, gate, memory)
+description: Fill in the praxis scaffold for THIS project (constitution, docs, gate, memory)
 ---
 
-You are finishing an `ic-guardrails` scaffold that was just copied into this
+You are finishing an `ic-praxis` scaffold that was just copied into this
 repository. The skeleton files exist but contain `{{PLACEHOLDER}}` markers and
 generic defaults. Adapt them to THIS project.
 

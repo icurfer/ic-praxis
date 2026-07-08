@@ -5,7 +5,7 @@ root of the target project. It builds the same scaffold from scratch.
 
 ---
 
-You are setting up a "guardrails" discipline system in this project — where
+You are setting up a "praxis" discipline system in this project — where
 retrospectives become machine-enforced pre-commit gates so mistakes can't ship
 twice. Create these five axes, adapting each to THIS repo (inspect the stack,
 build, and CI first):
