@@ -11,7 +11,7 @@ whole team, and every fresh clone, gets the same rules and hard-won lessons.
   - `feedback_*.md` — working rules / conventions (each with *why* + *how to apply*)
   - `project_*.md` — durable project facts
   - `reference_*.md` — pointers to external/internal resources
-- `commands/` — custom slash commands (e.g. `/ratchet-init`)
+- `commands/` — custom slash commands (e.g. `/guardrails-init`)
 - `skills/` — reusable skills (e.g. `verify-app`)
 
 ## Make memory persist across sessions and teammates
