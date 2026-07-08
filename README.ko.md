@@ -30,27 +30,35 @@
 
 ---
 
-## 설치 — 세 가지 방법
+## 설치
 
-**A. Claude Code에 한 문구 (가장 쉬움)**
+> 설치 스크립트는 **스캐폴드 파일만 당신의 레포에 복사**한다. 자신은 temp
+> 디렉토리에 내려받고 끝나면 지운다 — ic-ratchet의 레포/`.git`/`templates/`는
+> 당신의 프로젝트에 남지 않는다. 기존 파일은 절대 덮어쓰지 않는다(덮어쓰려면 `--force`).
 
-에이전트에게 이 레포를 가리키며 이렇게 말한다:
-
-> "이 프로젝트에 ic-ratchet 스캐폴드를 구성해줘 — https://github.com/icurfer/ic-ratchet 를 clone하고, 여기서 install.sh를 실행한 다음 /ratchet-init를 돌려."
-
-**B. 원라이너**
+**A. 원라이너 — 프로젝트 루트에서 실행 (권장)**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
+# curl 없으면 →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
 ```
 
-**C. clone 후 실행**
+그다음 게이트 활성화:
 
 ```bash
-git clone https://github.com/icurfer/ic-ratchet
-ic-ratchet/install.sh .        # 현재 레포에 스캐폴드 (기존 파일은 덮어쓰지 않음)
-bash scripts/install-hooks.sh      # 게이트 활성화
+bash scripts/install-hooks.sh
 ```
+
+**B. Claude Code에 한 문구**
+
+에이전트에게 이 레포를 가리키며 이렇게 말한다:
+
+> "https://github.com/icurfer/ic-ratchet 의 curl 원라이너로 이 프로젝트에 ic-ratchet
+> 스캐폴드를 구성해줘 (레포를 프로젝트 안에 clone하지 말고), 그다음 /ratchet-init를 돌려."
+
+> ⚠️ **ic-ratchet를 프로젝트 *안에* `git clone`해서 거기서 실행하지 말 것** — 프로젝트에
+> `ic-ratchet/` 폴더(자체 `.git` 포함)가 남아 오염된다. 로컬 사본을 두고 싶으면 프로젝트
+> **바깥**에 clone한 뒤 `/path/to/ic-ratchet/install.sh /path/to/your/project` 로 실행한다.
 
 그다음 Claude Code 안에서:
 

@@ -26,27 +26,37 @@ The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule bec
 
 ---
 
-## Install — three ways
+## Install
 
-**A. One phrase in Claude Code (easiest)**
+> The installer only **copies the scaffold files into your repo**. It downloads
+> itself to a temp dir and cleans up — ic-ratchet's own repo/`.git`/`templates/`
+> are never left in your project. Existing files are never overwritten (use
+> `--force` to replace).
 
-Point your agent at this repo and say:
-
-> "Scaffold ic-ratchet into this project — clone https://github.com/icurfer/ic-ratchet, run its install.sh here, then run /ratchet-init."
-
-**B. One-liner**
+**A. One-liner — run at your project root (recommended)**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
+# no curl? →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
 ```
 
-**C. Clone and run**
+Then activate the gate:
 
 ```bash
-git clone https://github.com/icurfer/ic-ratchet
-ic-ratchet/install.sh .        # scaffold into the current repo (won't overwrite existing files)
-bash scripts/install-hooks.sh      # activate the gate
+bash scripts/install-hooks.sh
 ```
+
+**B. One phrase in Claude Code**
+
+Point your agent at this repo and say:
+
+> "Scaffold ic-ratchet into this project using the curl one-liner from
+> https://github.com/icurfer/ic-ratchet (do not clone it into the project), then run /ratchet-init."
+
+> ⚠️ **Don't `git clone` ic-ratchet *inside* your project and run it there** — that
+> leaves an `ic-ratchet/` folder (with its own `.git`) in your repo. If you want a
+> local copy, clone it **outside** your project and run
+> `/path/to/ic-ratchet/install.sh /path/to/your/project`.
 
 Then, inside Claude Code:
 
