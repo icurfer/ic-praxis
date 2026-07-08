@@ -10,6 +10,19 @@ Most "AI rules" setups are a `CLAUDE.md` full of good intentions that go stale i
 
 ---
 
+## Why ic-ratchet exists
+
+It was extracted from running a real platform: a single hub repo coordinating one web frontend and ~17 backend services, each with its own deploy pipeline. At that scale, the same class of mistake kept recurring:
+
+- **Silent non-deploys.** A code change shipped, but the file CI watches to trigger a build wasn't bumped — so the pipeline never fired and the fix never reached production. Nobody noticed until it broke again.
+- **Rules that evaporate.** A lesson learned the hard way ("always do X") lived in a `CLAUDE.md` or in someone's head, and was forgotten three weeks later — reproducing the exact same incident.
+
+Writing rules down wasn't enough. **Documents don't stop a bad commit; they only describe what a good one looks like.** The fix was one move: take every rule a machine *can* check, and enforce it at commit time. Forget the version bump? The commit is blocked, with the reason printed. Paste a secret? Blocked.
+
+That is the ratchet — each incident tightens it one notch, and it never loosens. This repo packages that discipline so any project can adopt it in one command.
+
+---
+
 ## What you get
 
 A five-axis scaffold, dropped into any repo:
@@ -23,6 +36,51 @@ A five-axis scaffold, dropped into any repo:
 | **5. Verify skill** | `.claude/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts. |
 
 The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule becomes a gate that can't be forgotten.**
+
+---
+
+## Architecture
+
+The five axes split into three jobs — *write* rules, *enforce* them, *retain* the lessons — and feed each other in a loop:
+
+```mermaid
+flowchart TB
+    subgraph WRITE["✍️ Write the rules"]
+        A1["① CLAUDE.md<br/>constitution"]
+        A2["② docs/<br/>four-stage flow"]
+    end
+    subgraph ENFORCE["🔒 Enforce at commit time"]
+        A3["③ pre-commit gate<br/>check-conventions.sh"]
+    end
+    subgraph RETAIN["🧠 Retain the lessons"]
+        A4["④ .claude/memory/"]
+        A5["⑤ verify-app skill"]
+    end
+
+    A1 -- "checkable rules<br/>become gates" --> A3
+    A2 -- "checkable rules<br/>become gates" --> A3
+    A3 == "a blocked commit<br/>teaches a new rule" ==> A1
+    A4 -. "informs future work" .-> A1
+    A5 -. "proves changes<br/>actually work" .-> A3
+```
+
+The bold arrow is the point: enforcement flows **back** into the written rules. A commit that gets blocked isn't friction — it's the system teaching you the rule you were about to break.
+
+### What happens at commit time
+
+```mermaid
+flowchart LR
+    C["git commit"] --> H[".githooks/pre-commit"]
+    H --> S["check-conventions.sh"]
+    S --> G1{"deploy code changed<br/>but version not bumped?"}
+    S --> G2{"version file<br/>malformed?"}
+    S --> G3{"secret / taboo<br/>pattern present?"}
+    G1 -- yes --> X["🚫 commit blocked<br/>+ reason printed"]
+    G2 -- yes --> X
+    G3 -- yes --> X
+    G1 & G2 & G3 -- all clear --> OK["✅ commit proceeds"]
+    X -. "fix, or --no-verify<br/>to bypass" .-> C
+```
 
 ---
 
@@ -70,13 +128,14 @@ Then, inside Claude Code:
 
 ## The retro loop (why this is different)
 
-```
-   incident  ─►  write the rule in CLAUDE.md / docs   ─►  is it checkable?
-                                                            │
-                                       yes ────────────────►│  add a gate in
-                                                            │  check-conventions.sh
-                                        no                  │
-                                        └► stays a written rule (agent-enforced)
+```mermaid
+flowchart LR
+    I["💥 Incident<br/>something breaks"] --> W["Write the rule<br/>in CLAUDE.md / docs"]
+    W --> Q{"Mechanically<br/>checkable?"}
+    Q -- yes --> G["Add a gate in<br/>check-conventions.sh"]
+    Q -- no --> R["Stays a written rule<br/>(agent-enforced)"]
+    G --> P["🔒 Blocked at commit time<br/>— can't slip back"]
+    P -. "next incident<br/>tightens one more notch" .-> I
 ```
 
 Rules that depend on human memory break again. This moves as many as possible into the gate, one incident at a time.
