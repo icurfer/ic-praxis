@@ -27,9 +27,12 @@
 - `{{VERSION_FILE}}` is exactly one line, no blank second line.
 
 ## Do NOT
-<!-- Each rule earns its place by having caused a real incident. Add the "why". -->
+<!-- Each rule earns its place by having caused a real incident. Add the "why".
+     The first four are universal starters — keep or replace with your own. -->
 - Do not push if the build/checks fail — chain `check && commit && push`. (why: a broken build shipped once.)
 - Do not edit code with `sed`/blind replace — use exact-match edits only. (why: a stray match corrupted a file.)
+- Do not offer a "quick fix" that skips diagnosis — go diagnose → plan → implement. (why: shortcuts mask the cause and it resurfaces.)
+- Do not micro-bump-spam deploys — batch related changes into one version bump. (why: deploy churn and keepalive thrash.)
 - {{add your own hard-won rules}}
 
 ## Automated gate
@@ -40,4 +43,6 @@ When a retro produces a new checkable rule, add a gate to that script.
 
 ## Memory
 `.claude/memory/` is shared, cross-session memory (one fact per file, indexed in
-`MEMORY.md`). Save durable facts there, not incidental conversation detail.
+`MEMORY.md`). Save durable facts there, not incidental conversation detail. Run
+`bash scripts/setup-claude-memory.sh` once per clone to git-version it and load it
+each session. Starter rules are marked `(STARTER RULE …)` — keep or prune them.

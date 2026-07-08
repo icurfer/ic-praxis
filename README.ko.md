@@ -36,7 +36,7 @@
 | **1. 헌법(Constitution)** | `CLAUDE.md` | 에이전트가 매 세션 읽는 규칙: 작업 순서, 위임 책임, 강한 "하지 말 것"(각각 *왜*를 명시). |
 | **2. 4단 문서 체계** | `docs/` | 변경이 코드가 되기 전에 spec → scope → backlog → done 흐름으로 문서화된다. |
 | **3. 래칫 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. |
-| **4. 공유 메모리** | `.claude/memory/` | 세션을 넘어 지속되는 사실을 파일 1개=사실 1개로 인덱싱 — 컨텍스트가 초기화돼도 교훈이 살아남는다. |
+| **4. 공유 메모리** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | 세션을 넘어 지속되는 사실을 파일 1개=사실 1개로 인덱싱 — **git으로 버전 관리**돼 초기화돼도 교훈이 살아남고 팀과 공유된다. 범용 스타터 규칙 몇 개 포함. |
 | **5. 검증 스킬** | `.claude/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증. |
 
 핵심은 축 3이 축 1로 이어지는 고리다: **검증 가능한 규칙을 낳은 회고는, 잊을 수 없는 게이트가 된다.**
@@ -101,10 +101,11 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh 
 # curl 없으면 →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
 ```
 
-그다음 게이트 활성화:
+그다음 게이트 활성화 + 메모리 git 버전 관리:
 
 ```bash
-bash scripts/install-hooks.sh
+bash scripts/install-hooks.sh        # 커밋 게이트 활성화
+bash scripts/setup-claude-memory.sh  # 메모리 git 버전 관리 + 매 세션 로드
 ```
 
 **B. Claude Code에 한 문구**

@@ -74,11 +74,12 @@ done < <(find "$SRC" -type f -print0)
 # seed a one-line version file if the project has none
 if [ ! -e "$TARGET/version" ]; then printf '%s' "0.1.0" > "$TARGET/version"; echo "  add: version (0.1.0)"; fi
 
-chmod +x "$TARGET/scripts/check-conventions.sh" "$TARGET/.githooks/pre-commit" 2>/dev/null || true
+chmod +x "$TARGET"/scripts/*.sh "$TARGET/.githooks/pre-commit" 2>/dev/null || true
 
 echo ""
 echo "✓ scaffolded ($copied new, $skipped kept)."
-echo "Next:"
-echo "  1) if this is a git repo:  (cd \"$TARGET\" && bash scripts/install-hooks.sh)"
-echo "  2) open the project in Claude Code and run:  /ratchet-init <one line about your project>"
+echo "Next (from the project root):"
+echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
+echo "  2) git-version the memory:         bash scripts/setup-claude-memory.sh"
+echo "  3) in Claude Code, customize:      /ratchet-init <one line about your project>"
 echo "     (fills placeholders in CLAUDE.md + the gate, then proves the gate blocks a bad commit)"

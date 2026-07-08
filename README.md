@@ -32,7 +32,7 @@ A five-axis scaffold, dropped into any repo:
 | **1. Constitution** | `CLAUDE.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
 | **3. The ratchet gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
-| **4. Shared memory** | `.claude/memory/` | Cross-session facts, one per file, indexed — so lessons survive context resets. |
+| **4. Shared memory** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | Cross-session facts, one per file, indexed — **git-versioned** so lessons survive resets and are shared with the team. Ships a few universal starter rules. |
 | **5. Verify skill** | `.claude/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts. |
 
 The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule becomes a gate that can't be forgotten.**
@@ -98,10 +98,11 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh 
 # no curl? →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-ratchet/main/install.sh | bash
 ```
 
-Then activate the gate:
+Then activate the gate and git-version the memory:
 
 ```bash
-bash scripts/install-hooks.sh
+bash scripts/install-hooks.sh        # activate the commit gate
+bash scripts/setup-claude-memory.sh  # git-version memory + load it each session
 ```
 
 **B. One phrase in Claude Code**
