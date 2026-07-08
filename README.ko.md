@@ -155,6 +155,21 @@ flowchart LR
 
 회고에서 검증 가능한 규칙이 나올 때마다 게이트를 추가한다. 그게 규율의 전부다.
 
+## 스타터 규칙 — 맞는 것만 남기고 나머지는 지운다
+
+`.claude/memory/` 에는 **범용** 작업 규칙 몇 개가 들어 있고, 각각
+`(STARTER RULE — keep it or delete it.)` 로 표기돼 있다:
+
+- `feedback_diagnose_before_assume` — 추정 전에 실제 probe 로 재현
+- `feedback_no_quick_fix` — 진단 → 계획 → 구현; 진단을 건너뛰는 우회 금지
+- `feedback_verify_before_done` — 완료 선언 전 end-to-end 로 동작 확인
+- `feedback_push_is_one_cycle` — 코드 + 문서/작업내역 함께 push; 배포 묶기
+
+이건 **법이 아니라 출발점이다.** 팀에 맞는 것만 남기고 나머지는 지운 뒤,
+`.claude/memory/MEMORY.md` 의 해당 줄도 함께 정리한다. 진짜 가치는 *당신의* 사고가
+가르쳐 준 규칙에서 나온다 — 그런 규칙을 그때그때 추가하라. (첫 셋업 때
+`/ratchet-init` 이 취사선택을 도와준다.)
+
 ## 라이선스
 
 Apache-2.0

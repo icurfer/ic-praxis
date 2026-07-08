@@ -153,6 +153,21 @@ Open `scripts/check-conventions.sh` — the config block at the top:
 
 Add a new gate whenever a retro gives you a checkable rule. That's the whole discipline.
 
+## Starter rules — keep what fits, delete the rest
+
+`.claude/memory/` ships a few **universal** working rules, each marked
+`(STARTER RULE — keep it or delete it.)`:
+
+- `feedback_diagnose_before_assume` — reproduce with a real probe before guessing
+- `feedback_no_quick_fix` — diagnose → plan → implement; no shortcut that skips diagnosis
+- `feedback_verify_before_done` — exercise the change end-to-end before calling it done
+- `feedback_push_is_one_cycle` — code + docs/worklog ship together; batch deploys
+
+They're **starters, not law.** Keep the ones that fit your team, delete the rest,
+and prune the matching lines in `.claude/memory/MEMORY.md`. The real value comes
+from the rules *your* incidents teach you — add those as you go. (`/ratchet-init`
+will help you curate this on first setup.)
+
 ## License
 
 Apache-2.0
