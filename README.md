@@ -143,6 +143,39 @@ Rules that depend on human memory break again. This moves as many as possible in
 
 ---
 
+## Where does a new rule go? (routing)
+
+A retro produces a rule — but the *layer* you put it in decides whether it helps or
+just taxes every session. ic-praxis routes each new convention to its right home:
+
+```mermaid
+flowchart TD
+    N["New convention / lesson"] --> Q1{"Checkable at<br/>commit time?"}
+    Q1 -- yes --> GATE["🔒 git pre-commit gate<br/>scripts/check-conventions.sh"]
+    Q1 -- no --> Q2{"Should fire during the agent's<br/>tool use? block / modify / react"}
+    Q2 -- yes --> HOOK["🪝 Claude Code hook<br/>.claude/settings.json"]
+    Q2 -- no --> Q3{"Repeatable multi-step<br/>procedure?"}
+    Q3 -- yes --> SKILL["🧩 skill<br/>.claude/skills/"]
+    Q3 -- no --> Q4{"Durable fact to recall<br/>when relevant?"}
+    Q4 -- yes --> MEM["🧠 memory<br/>.claude/memory/"]
+    Q4 -- no --> RULE["📜 always-on rule<br/>CLAUDE.md"]
+```
+
+| Home | Fires when | Put here |
+|---|---|---|
+| **git gate** `check-conventions.sh` | every `git commit` | mechanically checkable musts (version bump, secrets, file format) |
+| **Claude Code hook** `.claude/settings.json` | a matching tool call, mid-work | block / auto-fix / react to an agent action (format-on-write, block a path) |
+| **skill** `.claude/skills/` | a matching task, on demand | repeatable procedures (verify, deploy) |
+| **memory** `.claude/memory/` | recalled by relevance | durable project facts & feedback |
+| **CLAUDE.md rule** | every session, always loaded | judgment conventions the agent must always keep |
+
+Rule of thumb: **the more mechanical and the more often it must fire, the harder the
+layer** (gate → hook → skill → memory → always-on rule). Putting a narrow rule in an
+always-loaded layer silently taxes every unrelated session. `/praxis-init` places each
+rule for you on setup; `/praxis-review` re-checks placement as the project grows.
+
+---
+
 ## Customizing the gate
 
 Open `scripts/check-conventions.sh` — the config block at the top:
@@ -172,7 +205,22 @@ will help you curate this on first setup.)
 
 This system is designed to **grow**: every incident adds a rule, a gate, a memory.
 That compounding is the point — but growth without curation becomes noise (stale
-rules, dead gates, an index that drifts). So it also ships the other half:
+rules, dead gates, an index that drifts). So two forces run in balance — **grow**
+(reflection → a new rule) and **curate** (prune what no longer earns its place):
+
+```mermaid
+flowchart TB
+    A["Adopt<br/>tiny scaffold — a few scripts + starter rules"] --> B{"Incident or lesson?"}
+    B -- "every time" --> C["Reflect → encode a rule<br/>+ a gate if checkable"]
+    C --> D["📈 GROW<br/>rules · gates · memory accrue"]
+    D --> E["Enforced on every commit<br/>— the team stops repeating it"]
+    E --> B
+    D -. "periodically" .-> F["🧹 CURATE — /praxis-review<br/>prune stale rules & dead gates"]
+    F --> G["Stays lean & high-signal<br/>only what your incidents earned survives"]
+    G -. feeds .-> D
+```
+
+The two commands behind the **curate** half:
 
 ```bash
 bash scripts/praxis-review.sh   # structural sprawl: orphan/dangling memory, growth stats

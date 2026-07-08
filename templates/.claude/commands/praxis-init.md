@@ -28,7 +28,16 @@ Do this:
    and show that the commit is BLOCKED. Then revert the dummy change.
 7. **Persist memory**: run `bash scripts/setup-claude-memory.sh` so the memory is
    git-versioned and loaded each session.
-8. Summarize what you customized and what the user should review.
+8. **Route the project's existing conventions.** As you fill CLAUDE.md, place each
+   convention in the right layer per the routing rule (harder layer for more
+   mechanical / more frequent rules):
+   - checkable at commit → gate in `check-conventions.sh`
+   - fire during tool use (block/modify/react) → `.claude/settings.json` hook
+   - repeatable procedure → `.claude/skills/`
+   - durable fact → `.claude/memory/`
+   - always-on judgment → a CLAUDE.md line
+   Don't pile everything into CLAUDE.md — a narrow rule there taxes every session.
+9. Summarize what you customized and what the user should review.
 
 Principle to preserve: the gate exists so retros become enforcement. Don't
 water it down — tune it to fire on THIS project's real mistakes.

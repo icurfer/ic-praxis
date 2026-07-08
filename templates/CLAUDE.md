@@ -41,6 +41,17 @@ The mechanically-checkable rules above are enforced at commit time by
 `bash scripts/install-hooks.sh`. Bypass (emergency): `git commit --no-verify`.
 When a retro produces a new checkable rule, add a gate to that script.
 
+## Routing a new rule (which layer?)
+When a retro yields a new convention, place it in the RIGHT layer — the more
+mechanical and the more often it must fire, the harder the layer:
+- **checkable at commit** → git gate in `scripts/check-conventions.sh`
+- **must fire during the agent's tool use** (block/modify/react) → a Claude Code
+  hook in `.claude/settings.json` (PreToolUse/PostToolUse)
+- **repeatable multi-step procedure** → a skill in `.claude/skills/`
+- **durable fact to recall when relevant** → `.claude/memory/`
+- **always-on judgment rule** → a "Do NOT"/work-order line in this file
+Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
+
 ## Memory
 `.claude/memory/` is shared, cross-session memory (one fact per file, indexed in
 `MEMORY.md`). Save durable facts there, not incidental conversation detail. Run
