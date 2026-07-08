@@ -168,6 +168,22 @@ and prune the matching lines in `.claude/memory/MEMORY.md`. The real value comes
 from the rules *your* incidents teach you — add those as you go. (`/guardrails-init`
 will help you curate this on first setup.)
 
+## Grows with you — and stays curated
+
+This system is designed to **grow**: every incident adds a rule, a gate, a memory.
+That compounding is the point — but growth without curation becomes noise (stale
+rules, dead gates, an index that drifts). So it also ships the other half:
+
+```bash
+bash scripts/guardrails-review.sh   # structural sprawl: orphan/dangling memory, growth stats
+```
+```
+/guardrails-review                  # + judgment: prune stale rules & dead gates (proposes, you confirm)
+```
+
+The result is a system that **starts tiny, grows only what your incidents earn, and
+curates itself** — the opposite of shipping someone else's mega-framework on day one.
+
 ## License
 
 Apache-2.0
