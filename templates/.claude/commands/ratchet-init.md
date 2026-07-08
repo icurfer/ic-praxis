@@ -19,7 +19,7 @@ Do this:
 3. **`scripts/check-conventions.sh`** — set `CODE_RE`, `VERSION_FILE`, and
    `FORBIDDEN_PATTERNS` to match this project's real deploy paths and taboos.
 4. **`docs/`** — keep the four-stage structure; adjust folder names only if the
-   user works in a different language. Leave `기획/계획/고도화/작업내역` empty.
+   user works in a different language. Leave `spec/scope/deferred/done` empty.
 5. **`.claude/memory/`** — leave the example memory; do not invent project facts.
 6. **Enable and PROVE the gate**: run `bash scripts/install-hooks.sh`, then make
    a deliberately-violating staged change (deploy code without a version bump)

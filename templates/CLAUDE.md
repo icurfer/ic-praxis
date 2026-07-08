@@ -13,13 +13,13 @@
 | {{app}} | {{port}} | {{role}} |
 
 ## Work order (do not skip)
-1. **Check the backlog first** — read `docs/요구사항/backlog.md` before starting new planning; mark handled items ✅ + version.
-2. Write **`docs/기획/plan-vX.Y.Z.md`** (spec) — clone the latest, edit as a diff. Every new feature spec states 3 lines: **placement / credential storage / existing pattern it follows**.
-3. Write **`docs/계획/scope-vX.Y.Z.md`** — MVP scope at file/function granularity.
-4. Update **`docs/고도화/backlog-vX.Y.Z.md`** — move non-MVP items here.
+1. **Check the backlog first** — read `docs/requirements/backlog.md` before starting new planning; mark handled items ✅ + version.
+2. Write **`docs/spec/plan-vX.Y.Z.md`** (spec) — clone the latest, edit as a diff. Every new feature spec states 3 lines: **placement / credential storage / existing pattern it follows**.
+3. Write **`docs/scope/scope-vX.Y.Z.md`** — MVP scope at file/function granularity.
+4. Update **`docs/deferred/backlog-vX.Y.Z.md`** — move non-MVP items here.
 5. Implement.
 6. **Bump the deploy trigger file (`{{VERSION_FILE}}`) in every affected repo** — the agent does this WITHOUT being told; CI won't fire otherwise.
-7. Write **`docs/작업내역/done-vX.Y.Z-{timestamp}.md`** + one CHANGELOG line + mark the backlog item ✅.
+7. Write **`docs/done/done-vX.Y.Z-{timestamp}.md`** + one CHANGELOG line + mark the backlog item ✅.
 
 ## Delegated responsibilities (agent does these unprompted)
 <!-- The steps humans forget. Name them so the agent owns them. -->
