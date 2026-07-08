@@ -1,5 +1,7 @@
 # ic-ratchet
 
+> **English** · [한국어](README.ko.md)
+
 **A quality ratchet for AI coding agents.** Retros become pre-commit gates — so the same mistake can't ship twice, and your project's discipline never slips back.
 
 Most "AI rules" setups are a `CLAUDE.md` full of good intentions that go stale in a month. `ic-ratchet` is the missing half: the rules you *write down* get *mechanically enforced* at commit time. When something breaks, you add a gate — and it stays fixed.
