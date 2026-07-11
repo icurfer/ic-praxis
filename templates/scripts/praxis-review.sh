@@ -14,6 +14,8 @@ set -euo pipefail
 MEM=".claude/memory"
 IDX="$MEM/MEMORY.md"
 GATE="scripts/check-conventions.sh"
+SKILLS=".claude/skills"
+AGENTS=".claude/agents"
 
 CYA=$'\033[36m'; YEL=$'\033[33m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
 hdr() { printf '\n%s== %s ==%s\n' "$CYA" "$1" "$RST"; }
@@ -26,8 +28,20 @@ mapfile -t FILES < <(find "$MEM" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' | 
 hdr "Growth"
 printf '  memory files: %s\n' "${#FILES[@]}"
 if [ -f "$GATE" ]; then
-  gates="$(grep -cE '^# ── Gate |^# ──.*[Gg]ate' "$GATE" 2>/dev/null || true)"
+  # Count gate section headers, locale-robust: an `# ── ` banner mentioning a
+  # gate/rule in any language ("Gate", "규칙", "règle", …). Falls back to any
+  # `# ── ` banner so a translated gate script still counts.
+  gates="$(grep -cE '^#[[:space:]]*──.*([Gg]ate|[Rr]ule|규칙|規則|règle|regla)' "$GATE" 2>/dev/null || true)"
+  [ "${gates:-0}" -eq 0 ] && gates="$(grep -cE '^#[[:space:]]*──' "$GATE" 2>/dev/null || true)"
   printf '  active gates in %s: %s\n' "$GATE" "${gates:-?}"
+fi
+if [ -d "$SKILLS" ]; then
+  n="$(find "$SKILLS" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+  printf '  skills in %s: %s\n' "$SKILLS" "$n"
+fi
+if [ -d "$AGENTS" ]; then
+  n="$(find "$AGENTS" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
+  printf '  sub-agents in %s: %s\n' "$AGENTS" "$n"
 fi
 
 hdr "Orphan memory files (on disk, not linked in MEMORY.md)"

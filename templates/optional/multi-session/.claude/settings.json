@@ -1,0 +1,16 @@
+{
+  "//": "ic-praxis multi-session module — a NON-BLOCKING pre-push reminder. It always exits 0 (a starter hook never blocks; exit 2 would). Delete this file if you don't run this repo with multiple parallel sessions. When a retro yields a rule that SHOULD fire mid-tool-use, add a real PreToolUse/PostToolUse hook here per the routing tree in CLAUDE.md.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -q 'git push' && echo '[praxis] multi-session: pull --rebase first; stage only THIS unit'\\''s files (never git add -A on the hub); let the main session write docs/ + CHANGELOG.' >&2; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

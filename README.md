@@ -37,6 +37,10 @@ A five-axis scaffold, dropped into any repo:
 
 The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule becomes a gate that can't be forgotten.**
 
+Those five are the **core** — always applied. Shape-specific concerns (monorepo,
+multiple parallel sessions, k8s deploy) are [opt-in modules](#selective-application--modules)
+you turn on only where they fit, so a simple repo stays simple.
+
 ---
 
 ## Architecture
@@ -86,16 +90,51 @@ flowchart LR
 
 ## Install
 
-> The installer only **copies the scaffold files into your repo**. It downloads
-> itself to a temp dir and cleans up — ic-praxis' own repo/`.git`/`templates/`
-> are never left in your project. Existing files are never overwritten (use
-> `--force` to replace).
+> **Best adopted *with* an AI agent, not just run.** The installer only copies
+> generic files; the value comes from adapting them to *your* repo — tuning the
+> gate to real deploy paths, and turning on only the [modules](#selective-application--modules)
+> your project shape needs (monorepo? multiple parallel sessions? k8s deploy?).
+> That's a judgment conversation, and `/praxis-init` is built to have it with you.
+> Running the raw installer and walking away gives you a generic scaffold that
+> only half-fits — which is exactly the "rules that go stale" problem this tool
+> exists to solve. **Let an agent adopt it with you.**
 
-**A. One-liner — run at your project root (recommended)**
+> The installer itself only **copies the scaffold files into your repo**. It
+> downloads itself to a temp dir and cleans up — ic-praxis' own
+> repo/`.git`/`templates/` are never left in your project. Existing files are
+> never overwritten (use `--force` to replace).
+
+**A. Adopt with an AI agent (recommended)**
+
+Point your agent (Claude Code) at this repo and say:
+
+> "Scaffold ic-praxis into this project using the curl one-liner from
+> https://github.com/icurfer/ic-praxis (do not clone it into the project), then run /praxis-init."
+
+Then, inside Claude Code:
+
+```
+/praxis-init  <one line describing your project>
+```
+
+`/praxis-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md`
+and the gate, **detects your project shape and confirms with you which modules to
+turn on**, tunes the gate to your real deploy paths — and **proves it works by
+making a deliberately-bad commit and showing it blocked.**
+
+> ⚠️ **Don't `git clone` ic-praxis *inside* your project and run it there** — that
+> leaves an `ic-praxis/` folder (with its own `.git`) in your repo. If you want a
+> local copy, clone it **outside** your project and run
+> `/path/to/ic-praxis/install.sh /path/to/your/project`.
+
+**B. Raw installer (scripted / CI use)**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
 # no curl? →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
+#
+# flags: --multi-session (hub + parallel sessions)  --no-version (per-area repos)
+#        --no-docs (already have a doc system)       --force (overwrite)
 ```
 
 Then activate the gate and git-version the memory:
@@ -105,25 +144,8 @@ bash scripts/install-hooks.sh        # activate the commit gate
 bash scripts/setup-claude-memory.sh  # git-version memory + load it each session
 ```
 
-**B. One phrase in Claude Code**
-
-Point your agent at this repo and say:
-
-> "Scaffold ic-praxis into this project using the curl one-liner from
-> https://github.com/icurfer/ic-praxis (do not clone it into the project), then run /praxis-init."
-
-> ⚠️ **Don't `git clone` ic-praxis *inside* your project and run it there** — that
-> leaves an `ic-praxis/` folder (with its own `.git`) in your repo. If you want a
-> local copy, clone it **outside** your project and run
-> `/path/to/ic-praxis/install.sh /path/to/your/project`.
-
-Then, inside Claude Code:
-
-```
-/praxis-init  <one line describing your project>
-```
-
-`/praxis-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md` and the gate, tunes the gate to your real deploy paths — and **proves it works by making a deliberately-bad commit and showing it blocked.**
+Even after the raw installer, still run `/praxis-init` — the scaffold stays
+generic until an agent tunes it to this project.
 
 ---
 
@@ -180,11 +202,43 @@ rule for you on setup; `/praxis-review` re-checks placement as the project grows
 
 Open `scripts/check-conventions.sh` — the config block at the top:
 
-- `CODE_RE` — paths whose change *must* be deployed (→ requires a version bump)
-- `VERSION_FILE` — the file your CI triggers on
-- `FORBIDDEN_PATTERNS` — secrets, debug leftovers, banned APIs
+- `AREA_CODE_RE` / `AREA_VFILE` — parallel arrays: for each deployable unit, the
+  code paths whose change *must* be deployed → the deploy-trigger file that must
+  be bumped with them. One area for a single-deploy repo; one per unit for a monorepo.
+- `FORBIDDEN_PATTERNS` + the `key: value` secret gate — secrets (covers both
+  `foo = "..."` and YAML/Helm `foo: "..."`), debug leftovers, banned APIs.
+- `DEPLOY_MANIFESTS` *(optional)* — keep a version bump in sync with the image tag
+  in a Helm/k8s/compose manifest, so you can't ship a bump that deploys the old image.
 
 Add a new gate whenever a retro gives you a checkable rule. That's the whole discipline.
+
+## Selective application — modules
+
+ic-praxis started as one repo's shape; not every project is that shape. The core
+(constitution + gate + docs + memory + verify) always applies. Everything
+shape-specific is an **opt-in module** — `/praxis-init` detects your repo and
+confirms each with you, or set it explicitly with an installer flag:
+
+| Module | Turn on when | What it adds | Enable |
+|---|---|---|---|
+| **monorepo** | >1 deployable unit | per-area `AREA_CODE_RE`/`AREA_VFILE`, no root `version` | `/praxis-init` detects · `--no-version` |
+| **multi-session** | a hub run with several parallel sessions | `.claude/agents/worker.md` (sub-unit-only worker) + `.claude/settings.json` pre-push reminder + a CLAUDE.md multi-session rule | `install.sh --multi-session` · `/praxis-init` asks |
+| **deploy-manifest** | k8s / Helm / compose | `DEPLOY_MANIFESTS` sync gate (version ↔ image tag) | `/praxis-init` detects |
+
+The **multi-session** module exists because the five axes discipline a *single*
+session well, but independent sessions sharing one working tree overwrite each
+other's hub edits silently (git sees no conflict). The module's answer: one main
+session + sub-agents that each own one sub-unit and hand a summary back — so the
+main session stays the single writer of shared state. Single-session projects
+should leave it off; it only taxes them.
+
+## What the gate does *not* do
+
+The gate stops **discipline lapses** (a forgotten version bump, a pasted secret, a
+malformed file), not **logic bugs**. Measured on one real 316-commit adoption, the
+gates would have caught the version-bump misses and the secret leaks — and zero of
+the 57 `fix:` commits. Set expectations accordingly: the value is removing the
+recurring "cleanup" commits and blocking silent non-deploys, not catching your bugs.
 
 ## Starter rules — keep what fits, delete the rest
 

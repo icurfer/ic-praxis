@@ -12,13 +12,24 @@
 |---|---|---|
 | {{app}} | {{port}} | {{role}} |
 
-## Work order (do not skip)
+## Change size — pick the workflow FIRST (do not skip)
+A four-doc set for a typo makes people bypass the whole system, so it dies. Size
+the change first, then follow the matching workflow:
+
+**Big change** — any ONE of: a new source file, ≥100 lines of code changed, a new
+API/endpoint, infra change, a new dependency, or a rule change. → full flow below.
+
+**Small change** — none of the above (typo, copy tweak, tiny bugfix). → skip
+spec/scope/deferred: just make the change, bump the deploy trigger if code
+changed, add **one `CHANGELOG` line** and tick `backlog.md`. Done.
+
+### Big-change work order
 1. **Check the backlog first** — read `docs/requirements/backlog.md` before starting new planning; mark handled items ✅ + version.
 2. Write **`docs/spec/plan-vX.Y.Z.md`** (spec) — clone the latest, edit as a diff. Every new feature spec states 3 lines: **placement / credential storage / existing pattern it follows**.
 3. Write **`docs/scope/scope-vX.Y.Z.md`** — MVP scope at file/function granularity.
 4. Update **`docs/deferred/backlog-vX.Y.Z.md`** — move non-MVP items here.
 5. Implement.
-6. **Bump the deploy trigger file (`{{VERSION_FILE}}`) in every affected repo** — the agent does this WITHOUT being told; CI won't fire otherwise.
+6. **Bump the deploy trigger file (`{{VERSION_FILE}}`) in every affected area** — the agent does this WITHOUT being told; CI won't fire otherwise.
 7. Write **`docs/done/done-vX.Y.Z-{timestamp}.md`** + one CHANGELOG line + mark the backlog item ✅.
 
 ## Delegated responsibilities (agent does these unprompted)
@@ -47,10 +58,28 @@ mechanical and the more often it must fire, the harder the layer:
 - **checkable at commit** → git gate in `scripts/check-conventions.sh`
 - **must fire during the agent's tool use** (block/modify/react) → a Claude Code
   hook in `.claude/settings.json` (PreToolUse/PostToolUse)
+- **a bounded sub-task another agent should own in isolation** → a sub-agent in
+  `.claude/agents/` (multi-session module — see below)
 - **repeatable multi-step procedure** → a skill in `.claude/skills/`
 - **durable fact to recall when relevant** → `.claude/memory/`
 - **always-on judgment rule** → a "Do NOT"/work-order line in this file
 Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
+
+<!-- OPTIONAL — keep this section ONLY if this repo is run with several parallel
+     sessions (a hub coordinating multiple sub-units). Delete it otherwise.
+     Installed by: install.sh --multi-session (adds .claude/agents/worker.md +
+     .claude/settings.json). -->
+## Multi-session rule (hub + parallel sessions)
+Independent CLI sessions share ONE working tree, so two of them editing the hub
+(`docs/`, this file, `CHANGELOG`, shared config) end in a **silent last-write-wins**
+overwrite — git never sees a conflict. Therefore:
+- Prefer **one main session + sub-agents** over several independent sessions —
+  a sub-agent's final message returns to the main session = a real handoff channel.
+- A **sub-agent edits only its own sub-unit** (code + that unit's version file).
+  **Only the main session writes the hub** (`docs/`, this file, `CHANGELOG`).
+- **One sub-unit = one session.** Never `git add -A` / `git commit -a` on the hub.
+- If you truly must edit in parallel, use `isolation: worktree` — **not lock files**
+  (a lock only hides the symptom; the root cause is the shared tree, so isolate).
 
 ## Memory
 `.claude/memory/` is shared, cross-session memory (one fact per file, indexed in

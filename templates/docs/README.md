@@ -12,6 +12,13 @@ flows through these stages so decisions are captured, not lost.
 | `done/done-vX.Y.Z-{timestamp}.md` | Completion report. An "affected repos" table captures dependencies. |
 | `../CHANGELOG.md` | One-line summary index. |
 
+**Big changes take the full flow; small changes don't.** A typo or tiny fix
+skips `spec/scope/deferred` — just make the change, bump the deploy trigger if
+code changed, add one `CHANGELOG` line and tick `backlog.md`. Requiring the full
+set for every trivial edit is how a doc system gets bypassed and dies; see the
+change-size rule in `CLAUDE.md`. (A change is "big" if it adds a source file,
+changes ≥100 lines, adds an API/dependency/infra, or changes a rule.)
+
 ## Version policy
 `vX.Y.Z` on the spec is the master. `0.1.0` to start, **`1.0.0` = release**.
 Each source repo carries its own one-line deploy-trigger file, patch-bumped only

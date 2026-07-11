@@ -41,6 +41,10 @@
 
 핵심은 축 3이 축 1로 이어지는 고리다: **검증 가능한 규칙을 낳은 회고는, 잊을 수 없는 게이트가 된다.**
 
+이 다섯은 **코어**로 항상 적용된다. 형태에 종속된 관심사(모노레포, 여러 세션 병렬,
+k8s 배포)는 맞는 곳에서만 켜는 [옵트인 모듈](#선택-적용--모듈)이라, 단순한 레포는 단순하게
+유지된다.
+
 ---
 
 ## 아키텍처
@@ -90,15 +94,47 @@ flowchart LR
 
 ## 설치
 
-> 설치 스크립트는 **스캐폴드 파일만 당신의 레포에 복사**한다. 자신은 temp
+> **그냥 돌리기보다, AI 에이전트와 *함께* 도입하는 것이 최선이다.** 설치 스크립트는
+> 범용 파일을 복사할 뿐이고, 가치는 그것을 *당신의* 레포에 맞추는 데서 나온다 — 게이트를
+> 실제 배포 경로에 튜닝하고, 프로젝트 형태가 필요로 하는 [모듈](#선택-적용--모듈)만 켜는
+> 것(모노레포? 여러 세션 병렬? k8s 배포?). 이건 판단이 필요한 대화이고, `/praxis-init`이
+> 바로 그 대화를 당신과 나누도록 만들어졌다. 설치만 하고 손 떼면 절반만 맞는 범용
+> 스캐폴드가 남는데 — 그게 바로 이 도구가 없애려는 "낡아버리는 규칙" 문제다.
+> **에이전트가 당신과 함께 도입하게 하라.**
+
+> 설치 스크립트 자체는 **스캐폴드 파일만 당신의 레포에 복사**한다. 자신은 temp
 > 디렉토리에 내려받고 끝나면 지운다 — ic-praxis의 레포/`.git`/`templates/`는
 > 당신의 프로젝트에 남지 않는다. 기존 파일은 절대 덮어쓰지 않는다(덮어쓰려면 `--force`).
 
-**A. 원라이너 — 프로젝트 루트에서 실행 (권장)**
+**A. AI 에이전트와 함께 도입 (권장)**
+
+에이전트(Claude Code)에게 이 레포를 가리키며 이렇게 말한다:
+
+> "https://github.com/icurfer/ic-praxis 의 curl 원라이너로 이 프로젝트에 ic-praxis
+> 스캐폴드를 구성해줘 (레포를 프로젝트 안에 clone하지 말고), 그다음 /praxis-init를 돌려."
+
+그다음 Claude Code 안에서:
+
+```
+/praxis-init  <프로젝트를 한 줄로 설명>
+```
+
+`/praxis-init`은 레포를 분석해 `CLAUDE.md`와 게이트의 모든 `{{placeholder}}`를 채우고,
+**프로젝트 형태를 감지해 어떤 모듈을 켤지 당신과 확인**하고, 게이트를 실제 배포 경로에
+맞게 튜닝한 뒤 — **일부러 잘못된 커밋을 만들어 차단되는 것을 보여줌으로써 동작을 증명한다.**
+
+> ⚠️ **ic-praxis를 프로젝트 *안에* `git clone`해서 거기서 실행하지 말 것** — 프로젝트에
+> `ic-praxis/` 폴더(자체 `.git` 포함)가 남아 오염된다. 로컬 사본을 두고 싶으면 프로젝트
+> **바깥**에 clone한 뒤 `/path/to/ic-praxis/install.sh /path/to/your/project` 로 실행한다.
+
+**B. 원시 설치 스크립트 (스크립트/CI용)**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
 # curl 없으면 →  wget -qO- https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
+#
+# 플래그: --multi-session (허브 + 병렬 세션)  --no-version (영역별 version 레포)
+#         --no-docs (이미 문서 체계 있음)       --force (덮어쓰기)
 ```
 
 그다음 게이트 활성화 + 메모리 git 버전 관리:
@@ -108,24 +144,8 @@ bash scripts/install-hooks.sh        # 커밋 게이트 활성화
 bash scripts/setup-claude-memory.sh  # 메모리 git 버전 관리 + 매 세션 로드
 ```
 
-**B. Claude Code에 한 문구**
-
-에이전트에게 이 레포를 가리키며 이렇게 말한다:
-
-> "https://github.com/icurfer/ic-praxis 의 curl 원라이너로 이 프로젝트에 ic-praxis
-> 스캐폴드를 구성해줘 (레포를 프로젝트 안에 clone하지 말고), 그다음 /praxis-init를 돌려."
-
-> ⚠️ **ic-praxis를 프로젝트 *안에* `git clone`해서 거기서 실행하지 말 것** — 프로젝트에
-> `ic-praxis/` 폴더(자체 `.git` 포함)가 남아 오염된다. 로컬 사본을 두고 싶으면 프로젝트
-> **바깥**에 clone한 뒤 `/path/to/ic-praxis/install.sh /path/to/your/project` 로 실행한다.
-
-그다음 Claude Code 안에서:
-
-```
-/praxis-init  <프로젝트를 한 줄로 설명>
-```
-
-`/praxis-init`은 레포를 분석해 `CLAUDE.md`와 게이트의 모든 `{{placeholder}}`를 채우고, 게이트를 실제 배포 경로에 맞게 튜닝한 뒤 — **일부러 잘못된 커밋을 만들어 차단되는 것을 보여줌으로써 동작을 증명한다.**
+원시 설치 스크립트를 돌린 뒤에도 `/praxis-init`은 꼭 실행하라 — 에이전트가 이 프로젝트에
+맞게 튜닝하기 전까지 스캐폴드는 범용인 채로 남는다.
 
 ---
 
@@ -182,11 +202,40 @@ flowchart TD
 
 `scripts/check-conventions.sh` 상단의 설정 블록을 연다:
 
-- `CODE_RE` — 변경 시 *반드시* 배포돼야 하는 경로 (→ version bump 필요)
-- `VERSION_FILE` — CI가 트리거로 감시하는 파일
-- `FORBIDDEN_PATTERNS` — 시크릿, 디버그 흔적, 금지 API
+- `AREA_CODE_RE` / `AREA_VFILE` — 병렬 배열: 각 배포 단위마다 *반드시* 배포돼야 하는
+  코드 경로 → 함께 bump돼야 하는 배포 트리거 파일. 단일 배포 레포는 영역 1개, 모노레포는
+  단위마다 하나씩.
+- `FORBIDDEN_PATTERNS` + `key: value` 시크릿 게이트 — 시크릿(`foo = "..."` 와 YAML/Helm
+  `foo: "..."` 둘 다 커버), 디버그 흔적, 금지 API.
+- `DEPLOY_MANIFESTS` *(선택)* — version bump를 Helm/k8s/compose 매니페스트의 이미지 태그와
+  동기화 → bump만 올라가고 옛 이미지가 배포되는 것을 막는다.
 
 회고에서 검증 가능한 규칙이 나올 때마다 게이트를 추가한다. 그게 규율의 전부다.
+
+## 선택 적용 — 모듈
+
+ic-praxis는 한 레포의 형태에서 출발했지만, 모든 프로젝트가 그 형태는 아니다. 코어(헌법 +
+게이트 + 문서 + 메모리 + 검증)는 항상 적용된다. 형태에 종속된 것은 전부 **옵트인 모듈**이다
+— `/praxis-init`이 레포를 감지해 각각을 당신과 확인하거나, 설치 플래그로 명시한다:
+
+| 모듈 | 켜는 때 | 추가되는 것 | 활성화 |
+|---|---|---|---|
+| **monorepo** | 배포 단위 >1 | 영역별 `AREA_CODE_RE`/`AREA_VFILE`, 루트 `version` 없음 | `/praxis-init` 감지 · `--no-version` |
+| **multi-session** | 여러 세션을 병렬로 굴리는 허브 | `.claude/agents/worker.md`(하위 단위 전용 워커) + `.claude/settings.json` push 전 리마인더 + CLAUDE.md 다중세션 규칙 | `install.sh --multi-session` · `/praxis-init` 질문 |
+| **deploy-manifest** | k8s / Helm / compose | `DEPLOY_MANIFESTS` 동기 게이트(version ↔ 이미지 태그) | `/praxis-init` 감지 |
+
+**multi-session** 모듈이 존재하는 이유: 5축은 *단일* 세션을 잘 규율하지만, 하나의 작업
+트리를 공유하는 독립 세션들은 서로의 허브 편집을 조용히 덮어쓴다(git이 충돌을 못 본다).
+모듈의 답: 메인 세션 1개 + 각자 하위 단위 하나만 맡고 요약을 되돌려주는 서브에이전트 —
+그래서 공유 상태는 메인 세션이 단독으로 쓴다. 단일 세션 프로젝트는 꺼두면 된다. 켜두면
+세금만 문다.
+
+## 게이트가 하지 *않는* 것
+
+게이트는 **규율 누락**(잊은 version bump, 붙여넣은 시크릿, 깨진 파일 형식)을 막지,
+**논리 버그**를 막지 않는다. 실제 316커밋 도입 사례에서 측정하니, 게이트는 version bump
+누락과 시크릿 유출은 잡았을 것이고 — `fix:` 커밋 57건 중 0건을 잡았다. 기대치를 그렇게
+맞춰라: 가치는 반복되는 "뒷수습" 커밋 제거와 조용한 미배포 차단이지, 버그 잡기가 아니다.
 
 ## 스타터 규칙 — 맞는 것만 남기고 나머지는 지운다
 
