@@ -116,6 +116,22 @@ if [ "$MULTI_SESSION" -eq 1 ]; then
   fi
 fi
 
+# Merge LF pins into a PRE-EXISTING .gitattributes (the copy loop never touches
+# an existing file, but without these lines a CRLF checkout on Windows breaks the
+# hook with '\r: command not found'). Additive and idempotent: appends only the
+# template lines that aren't already present verbatim.
+GA="$TARGET/.gitattributes"
+if [ -f "$GA" ] && [ -f "$SRC/.gitattributes" ]; then
+  while IFS= read -r attr; do
+    case "$attr" in ''|'#'*) continue ;; esac
+    if ! grep -qxF -e "$attr" "$GA"; then
+      [ -n "$(tail -c1 "$GA")" ] && printf '\n' >> "$GA"
+      printf '%s\n' "$attr" >> "$GA"
+      echo "  merge: .gitattributes += $attr"
+    fi
+  done < "$SRC/.gitattributes"
+fi
+
 # Seed a one-line root 'version' file — unless disabled, already present, or the
 # repo already uses per-area 'foo/version' files (monorepo). (P4)
 if [ "$NO_VERSION" -eq 1 ]; then
@@ -127,7 +143,9 @@ elif [ ! -e "$TARGET/version" ]; then
 fi
 
 # chmod +x only the files WE copied — never touch a pre-existing script we skipped. (P8)
-for c in "${COPIED_FILES[@]}"; do
+# (guarded expansion: an all-skipped re-run leaves the array empty, and empty
+#  array + set -u crashes bash <4.4 — e.g. stock macOS bash 3.2)
+for c in ${COPIED_FILES[@]+"${COPIED_FILES[@]}"}; do
   case "$c" in
     */scripts/*.sh|*/.githooks/pre-commit) chmod +x "$c" 2>/dev/null || true ;;
   esac

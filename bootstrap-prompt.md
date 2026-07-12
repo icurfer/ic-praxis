@@ -24,11 +24,22 @@ build, and CI first):
 
 3. **`scripts/check-conventions.sh` + `.githooks/pre-commit`** — a gate that
    BLOCKS commits violating checkable rules: deploy code changed without a
-   version bump (CI won't fire), malformed version file, secret/taboo patterns.
-   Check the **staged blob** (`git show ":$f"`), not the working tree. Match
-   secrets in BOTH `key = "..."` and YAML/Helm `key: "..."` form, with a
-   placeholder allowlist. For a monorepo, key each deploy area to its own version
-   file. Add `scripts/install-hooks.sh` to set `core.hooksPath`. Emergency bypass:
+   version bump (CI won't fire — **deletions count**: removing deploy code is a
+   deploy too, and deleting the version file itself is never a "bump"), malformed
+   version file (exactly one non-empty line, no blank second line), secret/taboo
+   patterns. EVERY gate judges the **staged blob** (`git show ":$f"`), never the
+   working tree, runs from the repo root, and disables `core.quotepath` so
+   non-ASCII filenames aren't silently skipped. Match secrets in quoted form
+   (`key = "..."`, YAML `key: "..."`, unterminated `key: "...`) in all files, AND
+   bare form (`key: value`, `KEY=value`) in config-style files (.env/.yaml/.ini/…;
+   in code a bare RHS is a variable reference). The placeholder allowlist is
+   checked per assignment against each **extracted value** — a line is exempt
+   only if ALL its values are placeholders. For a monorepo, key each deploy area
+   to its own version file. Add `scripts/install-hooks.sh` to set
+   `core.hooksPath`. Portability: keep the scripts bash-3.2/Git-Bash compatible
+   (no `declare -A`, no `mapfile`; guard empty-array expansions) and add a
+   `.gitattributes` pinning `*.sh`, `.githooks/*`, and `version` to `eol=lf` so
+   Windows checkouts don't break the hook. Emergency bypass:
    `git commit --no-verify`.
 
 4. **`.claude/memory/`** — one fact per file with a `type:` (feedback / project

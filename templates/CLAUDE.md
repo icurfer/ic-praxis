@@ -35,7 +35,7 @@ changed, add **one `CHANGELOG` line** and tick `backlog.md`. Done.
 ## Delegated responsibilities (agent does these unprompted)
 <!-- The steps humans forget. Name them so the agent owns them. -->
 - Bump `{{VERSION_FILE}}` whenever you touch deploy-affecting code.
-- `{{VERSION_FILE}}` is exactly one line, no blank second line.
+- `{{VERSION_FILE}}` is exactly one non-empty line — no blank second line (`printf '%s' "<ver>" > {{VERSION_FILE}}`).
 
 ## Do NOT
 <!-- Each rule earns its place by having caused a real incident. Add the "why".
@@ -66,9 +66,10 @@ mechanical and the more often it must fire, the harder the layer:
 Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
 
 <!-- OPTIONAL — keep this section ONLY if this repo is run with several parallel
-     sessions (a hub coordinating multiple sub-units). Delete it otherwise.
+     sessions (a hub coordinating multiple sub-units). Delete it otherwise — an
+     inapplicable rule taxes every session; /praxis-init asks and prunes it.
      Installed by: install.sh --multi-session (adds .claude/agents/worker.md +
-     .claude/settings.json). -->
+     .claude/settings.json). Section ends at the /multi-session marker. -->
 ## Multi-session rule (hub + parallel sessions)
 Independent CLI sessions share ONE working tree, so two of them editing the hub
 (`docs/`, this file, `CHANGELOG`, shared config) end in a **silent last-write-wins**
@@ -80,6 +81,8 @@ overwrite — git never sees a conflict. Therefore:
 - **One sub-unit = one session.** Never `git add -A` / `git commit -a` on the hub.
 - If you truly must edit in parallel, use `isolation: worktree` — **not lock files**
   (a lock only hides the symptom; the root cause is the shared tree, so isolate).
+<!-- /multi-session module -->
+
 
 ## Memory
 `.claude/memory/` is shared, cross-session memory (one fact per file, indexed in

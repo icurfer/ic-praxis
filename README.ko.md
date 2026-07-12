@@ -135,7 +135,15 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 #
 # 플래그: --multi-session (허브 + 병렬 세션)  --no-version (영역별 version 레포)
 #         --no-docs (이미 문서 체계 있음)       --force (덮어쓰기)
+# 파이프로 플래그를 넘길 때는 `bash -s --` 가 필요하다:
+#   curl -fsSL .../install.sh | bash -s -- --multi-session
 ```
+
+**Linux · macOS · Windows(Git Bash) 모두에서 동작한다.** 스크립트는 macOS 기본
+bash 3.2에서도 돈다(`declare -A`/`mapfile` 미사용). 함께 배포되는 `.gitattributes`가
+`*.sh`/훅/`version`을 LF로 고정해 CRLF 체크아웃이 게이트를 깨지 못하게 하고,
+`setup-claude-memory.sh`는 심볼릭 링크에 개발자 모드가 필요한 Windows에서 NTFS
+정션으로 폴백한다. Windows에서는 모든 명령을 **Git Bash**에서 실행할 것.
 
 그다음 게이트 활성화 + 메모리 git 버전 관리:
 
@@ -205,8 +213,12 @@ flowchart TD
 - `AREA_CODE_RE` / `AREA_VFILE` — 병렬 배열: 각 배포 단위마다 *반드시* 배포돼야 하는
   코드 경로 → 함께 bump돼야 하는 배포 트리거 파일. 단일 배포 레포는 영역 1개, 모노레포는
   단위마다 하나씩.
-- `FORBIDDEN_PATTERNS` + `key: value` 시크릿 게이트 — 시크릿(`foo = "..."` 와 YAML/Helm
-  `foo: "..."` 둘 다 커버), 디버그 흔적, 금지 API.
+- `FORBIDDEN_PATTERNS` + `key: value` 시크릿 게이트 — 시크릿, 디버그 흔적, 금지 API.
+  따옴표 값(`foo = "..."`, YAML/Helm `foo: "..."`)은 모든 파일에서, **따옴표 없는 값**
+  (`foo: hunter2...`, `FOO=...`)은 설정형 파일(`.env`/`.yaml`/`.ini`/… — 필요하면
+  `BARE_VALUE_FILES_RE`를 넓힐 것)에서 검사한다. placeholder 허용목록(`CHANGE_ME`,
+  `{{...}}` 등)은 **추출된 값에만** 적용되므로, 같은 줄의 주석이 진짜 시크릿을
+  면제시키지 못한다.
 - `DEPLOY_MANIFESTS` *(선택)* — version bump를 Helm/k8s/compose 매니페스트의 이미지 태그와
   동기화 → bump만 올라가고 옛 이미지가 배포되는 것을 막는다.
 

@@ -135,7 +135,15 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 #
 # flags: --multi-session (hub + parallel sessions)  --no-version (per-area repos)
 #        --no-docs (already have a doc system)       --force (overwrite)
+# passing flags through a pipe needs `bash -s --`:
+#   curl -fsSL .../install.sh | bash -s -- --multi-session
 ```
+
+**Works on Linux, macOS, and Windows (Git Bash).** The scripts run on stock
+macOS bash 3.2 (no `declare -A`/`mapfile`), a shipped `.gitattributes` pins
+`*.sh`/hooks/`version` to LF so a CRLF checkout can't break the gate, and
+`setup-claude-memory.sh` falls back to an NTFS junction on Windows where
+symlinks need Developer Mode. On Windows, run everything from **Git Bash**.
 
 Then activate the gate and git-version the memory:
 
@@ -205,8 +213,13 @@ Open `scripts/check-conventions.sh` — the config block at the top:
 - `AREA_CODE_RE` / `AREA_VFILE` — parallel arrays: for each deployable unit, the
   code paths whose change *must* be deployed → the deploy-trigger file that must
   be bumped with them. One area for a single-deploy repo; one per unit for a monorepo.
-- `FORBIDDEN_PATTERNS` + the `key: value` secret gate — secrets (covers both
-  `foo = "..."` and YAML/Helm `foo: "..."`), debug leftovers, banned APIs.
+- `FORBIDDEN_PATTERNS` + the `key: value` secret gate — secrets, debug leftovers,
+  banned APIs. Quoted values (`foo = "..."`, YAML/Helm `foo: "..."`) are checked in
+  every file; **bare values** (`foo: hunter2...`, `FOO=...`) are checked in
+  config-style files (`.env`/`.yaml`/`.ini`/… — widen `BARE_VALUE_FILES_RE` if
+  needed). The placeholder allowlist (`CHANGE_ME`, `{{...}}`, …) is applied to the
+  **extracted value only**, so a comment elsewhere on the line can't exempt a real
+  secret.
 - `DEPLOY_MANIFESTS` *(optional)* — keep a version bump in sync with the image tag
   in a Helm/k8s/compose manifest, so you can't ship a bump that deploys the old image.
 

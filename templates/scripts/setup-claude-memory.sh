@@ -25,6 +25,32 @@ if [ -d "$TARGET" ] && [ ! -L "$TARGET" ]; then
   mv "$TARGET" "$BACKUP"
 fi
 
-ln -sfn "$SRC" "$TARGET"
+# Windows (Git Bash/MSYS/Cygwin): plain `ln -s` silently COPIES instead of
+# linking, which defeats git-versioning (the copy diverges). Force a native
+# symlink (needs Developer Mode), else fall back to an NTFS junction (no admin
+# needed). `winsymlinks:nativestrict` makes ln FAIL instead of copying — Git
+# Bash/MSYS2 read it from MSYS=, Cygwin from CYGWIN=, so set both.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    # Remove only a LINK at $TARGET (a real dir was backed up above). NEVER
+    # `rm -rf` here: an rm that doesn't treat an NTFS junction as a link would
+    # recurse THROUGH it and delete the repo's memory source files.
+    if [ -L "$TARGET" ]; then
+      rm -f "$TARGET"
+    elif [ -d "$TARGET" ]; then
+      cmd //c rmdir "$(cygpath -w "$TARGET")" >/dev/null 2>&1 || true  # junction/empty dir only — rmdir never recurses
+    fi
+    if MSYS=winsymlinks:nativestrict CYGWIN=winsymlinks:nativestrict \
+         ln -sfn "$SRC" "$TARGET" 2>/dev/null && [ -L "$TARGET" ]; then
+      :  # native symlink
+    elif cmd //c mklink /J "$(cygpath -w "$TARGET")" "$(cygpath -w "$SRC")" >/dev/null 2>&1; then
+      :  # NTFS junction — native Windows apps (Claude Code) can traverse it
+    else
+      echo "ERROR: could not create a symlink or junction." >&2
+      echo "  Enable Windows Developer Mode (Settings > For developers) and re-run." >&2
+      exit 1
+    fi ;;
+  *) ln -sfn "$SRC" "$TARGET" ;;
+esac
 echo "✓ linked: $TARGET -> $SRC"
 echo "  Your .claude/memory is now git-versioned and loaded by Claude Code each session."

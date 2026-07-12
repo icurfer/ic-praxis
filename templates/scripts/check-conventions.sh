@@ -7,6 +7,12 @@
 # down why, and if it was mechanically checkable you moved it here so it can
 # never slip back. Add a new gate every time a retro produces a checkable rule.
 #
+# Every gate judges the STAGED BLOB (`git show ":$f"`) — what actually gets
+# committed — never the working tree. `--all` mode sweeps the working tree instead.
+#
+# Portability: runs on stock bash 3.2 (macOS) and Git Bash (Windows) — keep it
+# free of bash-4-isms (declare -A, mapfile) and guard empty-array expansions.
+#
 # Usage:
 #   scripts/check-conventions.sh          # check staged changes (called by the hook)
 #   scripts/check-conventions.sh --all    # also sweep the whole working tree for secrets
@@ -14,6 +20,10 @@
 # Emergency bypass:  git commit --no-verify
 #
 set -euo pipefail
+
+# Staged paths are repo-root relative — run from the root so `git show :path`,
+# pathspecs, and AREA regexes agree no matter where the script was invoked from.
+cd "$(git rev-parse --show-toplevel)"
 
 # ── Config (tune these for your project) ────────────────────────────────────
 # AREAS — one entry per deployable unit, expressed as two PARALLEL arrays:
@@ -55,30 +65,50 @@ FORBIDDEN_PATTERNS=(
   'AKIA[0-9A-Z]{16}'                       # AWS access key id
   '-----BEGIN [A-Z ]*PRIVATE KEY-----'     # private key literal
 )
-# key/value secret assignment — matches both `foo = "..."` and `foo: "..."`
-# (YAML/Helm/compose/Actions), which the '=' only form used to miss entirely.
+# key/value secret assignment. Three forms:
+#   quoted        — `foo = "..."` / YAML `foo: '...'`  → checked in EVERY file
+#   unterminated  — `foo: "...` (pasted secret, no closing quote) → every file
+#   bare          — `foo: hunter2...` / `FOO=...`      → checked only in
+#     config-style files (BARE_VALUE_FILES_RE). In code, a bare RHS is a variable
+#     reference, not a literal — flagging `token = access_token` would drown the
+#     gate in false positives; quoted literals cover code.
 SECRET_KEY_RE='(password|passwd|secret_?key|secretkey|token|api_?key)'
-# Lines whose value looks like a placeholder/scaffold are skipped, so the gate
-# doesn't flag `secretKey: "CHANGE_ME_..."` in its own templates.
-PLACEHOLDER_RE='(CHANGE_ME|change[-_]?me|REDACTED|EXAMPLE|xxxx+|\$\{|\{\{|<[^>]+>)'
+BARE_VALUE_FILES_RE='(^|/)(\.env[^/]*|[^/]+\.(ya?ml|properties|ini|conf|cfg|toml|env))$|(^|/)dockerfile[^/]*$'
+# A value that looks like a placeholder/scaffold is skipped. The check runs on
+# EVERY assignment on the line, value by value — a line is exempt only if ALL its
+# values are placeholders, so a placeholder in a trailing comment can't exempt a
+# real secret earlier on the line. Wordy patterns are boundary-anchored:
+# `EXAMPLE_KEY` is a placeholder, `myexample-ProdToken99` is not.
+PLACEHOLDER_RE='(CHANGE_?ME|REDACTED|xxxx+|\$\{|\{\{|<[^>]*>|(^|[^[:alnum:]])(example|placeholder|dummy|change[-_]?me)([^[:alnum:]]|$))'
 # Minimum value length for the key/value gate ({3,} over-flags `token: "abc"`).
 SECRET_MIN_LEN=8
-# Files the forbidden-pattern gate scans. Array; widen/narrow as needed.
+# Pathspecs the `--all` sweep scans. Staged mode ALWAYS scans every staged file —
+# a narrowed glob must never exempt a staged secret from the commit gate.
 FORBIDDEN_GLOBS=('.')
 # ────────────────────────────────────────────────────────────────────────────
 
-RED=$'\033[31m'; YEL=$'\033[33m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
+RED=$'\033[31m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
 fail=0
 err()  { printf '%s✗%s %s\n' "$RED" "$RST" "$1" >&2; fail=1; }
 ok()   { printf '%s✓%s %s\n' "$GRN" "$RST" "$1" >&2; }
 
 MODE="${1:-}"
-staged() { git diff --cached --name-only --diff-filter=ACMR; }
-STAGED_LIST="$(staged || true)"
+
+# quotepath=false: without it git shell-quotes non-ASCII paths ("\354\204\244…"),
+# which breaks the AREA regexes and makes `git show ":$f"` fail — silently
+# skipping exactly the files the gate must judge.
+gitq() { git -c core.quotepath=false "$@"; }
+
+# Three staged views: Gate A judges every change INCLUDING deletions (removing
+# deploy code is a deploy too); the "bump" must be a file that still EXISTS after
+# the commit; content scans read only files that will exist.
+CHANGED_LIST="$(gitq diff --cached --name-only --diff-filter=ACMRD || true)"
+PRESENT_LIST="$(gitq diff --cached --name-only --diff-filter=ACMR || true)"
+DELETED_LIST="$(gitq diff --cached --name-only --diff-filter=D || true)"
 
 # Read a file's to-be-committed content: the staged blob (index), NOT the
 # working tree — a pre-commit gate must judge what actually gets committed.
-# `--all` mode sweeps the working tree instead.
+# `--all` mode sweeps the working tree instead. Every gate reads through this.
 content() {
   if [ "$MODE" = "--all" ]; then cat -- "$1" 2>/dev/null
   else git show ":$1" 2>/dev/null; fi
@@ -87,32 +117,41 @@ content() {
 # ── Gate A: deploy-trigger bump missing (per area) ──────────────────────────
 # Deploy-affecting code is staged but that area's version file is not → CI never
 # fires and the change silently never ships. Pure docs/config changes are exempt.
+# A staged DELETION of the version file is never a bump — it removes the trigger.
 for i in "${!AREA_CODE_RE[@]}"; do
   code_re="${AREA_CODE_RE[$i]}"; vfile="${AREA_VFILE[$i]}"
   [ -n "$code_re" ] && [ -n "$vfile" ] || continue
-  if printf '%s\n' "$STAGED_LIST" | grep -Eq -e "$code_re"; then
-    if printf '%s\n' "$STAGED_LIST" | grep -qx -e "$vfile"; then
+  if printf '%s\n' "$DELETED_LIST" | grep -Fxq -e "$vfile"; then
+    err "'$vfile' is staged for DELETION — the deploy trigger would vanish and CI could never fire again."
+    printf '%s    → unstage it (git restore --staged %s), or bypass with --no-verify if this is an intentional restructure.%s\n' "$DIM" "$vfile" "$RST" >&2
+    continue
+  fi
+  if printf '%s\n' "$CHANGED_LIST" | grep -Eq -e "$code_re"; then
+    if printf '%s\n' "$PRESENT_LIST" | grep -Fxq -e "$vfile"; then
       ok "deploy trigger bumped ('$vfile' staged with code change)"
     else
       err "deploy code changed but '$vfile' is not staged — CI won't fire."
       printf '%s    → patch-bump %s and git add it. Changed code paths:%s\n' "$DIM" "$vfile" "$RST" >&2
-      printf '%s\n' "$STAGED_LIST" | grep -E -e "$code_re" | sed 's/^/        /' >&2
+      printf '%s\n' "$CHANGED_LIST" | grep -E -e "$code_re" | sed 's/^/        /' >&2
     fi
   fi
 done
 
-# ── Gate B: version file format (one line, no blank second line) ────────────
-# Check every distinct version file referenced by AREAS.
-declare -A _seen_vfile=()
+# ── Gate B: version file format (one non-empty line, no blank second line) ──
+# Judged on the staged blob: a malformed blob with a fixed working tree must
+# still block (and vice versa must pass). A single trailing newline is fine —
+# blocking `1.2.3\n` would hard-block every editor-touched adopter repo.
+seen_vfiles=' '
 for vfile in "${AREA_VFILE[@]}"; do
-  [ -n "$vfile" ] && [ -z "${_seen_vfile[$vfile]:-}" ] || continue
-  _seen_vfile[$vfile]=1
-  [ -f "$vfile" ] || continue
-  nlines="$(awk 'END{print NR}' "$vfile")"
-  first="$(head -n1 "$vfile")"
-  if [ "$nlines" -ne 1 ] || [ -z "$first" ]; then
-    err "'$vfile' must be exactly one non-empty line (currently ${nlines})."
-    printf '%s    → printf %%s "<version>" > %s%s\n' "$DIM" "$vfile" "$RST" >&2
+  [ -n "$vfile" ] || continue
+  case "$seen_vfiles" in *" $vfile "*) continue ;; esac
+  seen_vfiles="$seen_vfiles$vfile "
+  content "$vfile" >/dev/null 2>&1 || continue   # not tracked here → nothing to judge
+  nlines="$(content "$vfile" | awk 'END{print NR}')"
+  first="$(content "$vfile" | head -n1)"
+  if [ "${nlines:-0}" -ne 1 ] || [ -z "$first" ]; then
+    err "'$vfile' must be exactly one non-empty line (staged: ${nlines:-0} line(s))."
+    printf '%s    → printf %%s "<version>" > %s   (then git add it)%s\n' "$DIM" "$vfile" "$RST" >&2
   else
     ok "'$vfile' format ok ($first)"
   fi
@@ -122,38 +161,72 @@ done
 # Reads the STAGED blob (or the working tree under --all) — never a mix, so a
 # secret staged then deleted from the working tree is still caught.
 scan_targets() {
-  if [ "$MODE" = "--all" ]; then git ls-files -- "${FORBIDDEN_GLOBS[@]}"
-  else printf '%s\n' "$STAGED_LIST"; fi
+  if [ "$MODE" = "--all" ]; then
+    gitq ls-files -- ${FORBIDDEN_GLOBS[@]+"${FORBIDDEN_GLOBS[@]}"}
+  else
+    printf '%s\n' "$PRESENT_LIST"
+  fi
 }
-report_hit() { [ "$1" -eq 0 ] && err "forbidden pattern detected:"; }
+QUOTED_ASSIGN_RE="${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*(\"[^\"]{${SECRET_MIN_LEN},}\"|'[^']{${SECRET_MIN_LEN},}'|[\"'][^\"' ]{${SECRET_MIN_LEN},})"
+BARE_ASSIGN_RE="${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*[A-Za-z0-9_+/=.-]{${SECRET_MIN_LEN},}[[:space:]]*(#.*)?\$"
+# Extract the assigned value from ONE matched assignment (input is lowercased —
+# the value is only ever compared against PLACEHOLDER_RE, case-insensitively).
+assign_val() {
+  printf '%s\n' "$1" | sed -En \
+    -e "s@.*${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*\"([^\"]{${SECRET_MIN_LEN},})\".*@\2@p" \
+    -e "s@.*${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*'([^']{${SECRET_MIN_LEN},})'.*@\2@p" \
+    -e "s@.*${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*[\"']([^\"' ]{${SECRET_MIN_LEN},}).*@\2@p" \
+    -e "s@.*${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*([a-z0-9_+/=.-]{${SECRET_MIN_LEN},})[[:space:]]*(#.*)?\$@\2@p" \
+    | head -n1
+}
+# A line is exempt ONLY if every assignment on it extracts to a placeholder
+# value. Unparseable → treated as real (block is the safe direction).
+line_all_placeholders() {  # $1 = line, $2 = assign regex
+  lline="$(printf '%s\n' "$1" | tr '[:upper:]' '[:lower:]')"
+  found=0
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    found=1
+    v="$(assign_val "$m")"
+    [ -n "$v" ] || return 1
+    printf '%s\n' "$v" | grep -Eiq -e "$PLACEHOLDER_RE" || return 1
+  done < <(printf '%s\n' "$lline" | grep -oE -e "$2" || true)
+  [ "$found" -eq 1 ]
+}
+report_hit() { if [ "$1" -eq 0 ]; then err "forbidden pattern detected:"; fi; }
 hit=0
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   body="$(content "$f")" || continue
   [ -n "$body" ] || continue
   # 1) literal secrets — always block
-  for pat in "${FORBIDDEN_PATTERNS[@]}"; do
+  for pat in ${FORBIDDEN_PATTERNS[@]+"${FORBIDDEN_PATTERNS[@]}"}; do
     while IFS= read -r line; do
       report_hit "$hit"; hit=1
       printf '        %s: %s\n' "$f" "$line" >&2
-    done < <(printf '%s\n' "$body" | grep -nE -e "$pat" || true)
+    done < <(printf '%s\n' "$body" | grep -nIE -e "$pat" || true)
   done
-  # 2) key/value secret assignment — block unless the value is a placeholder
+  # 2) key/value secret assignment — block unless EVERY value is a placeholder
+  assign_re="$QUOTED_ASSIGN_RE"
+  if printf '%s\n' "$f" | grep -Eiq -e "$BARE_VALUE_FILES_RE"; then
+    assign_re="${QUOTED_ASSIGN_RE}|${BARE_ASSIGN_RE}"
+  fi
   while IFS= read -r line; do
-    printf '%s' "$line" | grep -Eiq -e "$PLACEHOLDER_RE" && continue
+    if line_all_placeholders "$line" "$assign_re"; then continue; fi
     report_hit "$hit"; hit=1
     printf '        %s: %s\n' "$f" "$line" >&2
-  done < <(printf '%s\n' "$body" | grep -niE -e "${SECRET_KEY_RE}[[:space:]]*[:=][[:space:]]*[\"'][^\"' ]{${SECRET_MIN_LEN},}" || true)
+  done < <(printf '%s\n' "$body" | grep -nIiE -e "$assign_re" || true)
 done < <(scan_targets)
 
 # ── Gate D: deploy-manifest sync (optional) ─────────────────────────────────
 # A version bump that doesn't update the manifest tag ships the OLD image.
-for m in "${DEPLOY_MANIFESTS[@]}"; do
+# Judged on staged blobs, like every other gate.
+for m in ${DEPLOY_MANIFESTS[@]+"${DEPLOY_MANIFESTS[@]}"}; do
   [ -n "$m" ] || continue
   vfile="${m%%|*}"; rest="${m#*|}"; mfile="${rest%%|*}"; tag_re="${rest#*|}"
-  [ -f "$vfile" ] && [ -f "$mfile" ] || continue
-  want="$(head -n1 "$vfile")"
-  have="$(sed -nE "s/.*${tag_re}.*/\1/p" "$mfile" 2>/dev/null | head -n1)"
+  content "$vfile" >/dev/null 2>&1 && content "$mfile" >/dev/null 2>&1 || continue
+  want="$(content "$vfile" | head -n1)"
+  have="$(content "$mfile" | sed -nE "s/.*${tag_re}.*/\1/p" | head -n1)"
   if [ -n "$have" ] && [ "$want" != "$have" ]; then
     err "version($want) != manifest tag($have) in $mfile — bump the manifest too."
   fi

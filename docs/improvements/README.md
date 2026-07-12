@@ -1,9 +1,9 @@
 # Improvement retros — resolved history
 
-These are real adoption retros: two projects took ic-praxis on and hit gaps. They
-are kept as **history**, not open work — every item below was addressed in
-**v0.2.0** (2026-07-12). This is praxis eating its own cooking: an incident became
-a written record, which became an enforced change.
+These are real retros kept as **history**, not open work: two adoption retros
+(resolved in **v0.2.0**, 2026-07-12) and one deep self-review of the gate engine
+(resolved in **v0.3.0**, 2026-07-12). This is praxis eating its own cooking: an
+incident became a written record, which became an enforced change.
 
 Don't delete these — the *why* behind a rule is worth more than the rule. If you
 reopen or revise one, note it here rather than editing the source retro.
@@ -29,7 +29,22 @@ reopen or revise one, note it here rather than editing the source retro.
 | P0 | No multi-session coordination (silent hub overwrites) | **multi-session module**: `CLAUDE.md` multi-session rule + main-session-only hub writes |
 | P1 | `.claude/settings.json` + `.claude/agents/` axes had no scaffold | `templates/optional/multi-session/` ships `worker.md` + `settings.json`; `praxis-review.sh` now counts skills/agents (locale-robust) |
 
-## The cross-cutting change
+## `from-self-review.md` — the gate engine audited against itself (v0.3.0)
+
+Every gap **reproduced in a throwaway repo** before being fixed: bare (unquoted)
+secrets never matched (S0), the placeholder allowlist judged the line instead of
+the value (S1), Gates B/D read the working tree instead of the staged blob (S2 —
+a HALF-APPLIED version of aipf-mgmt P1), deletions bypassed Gate A (S3), the
+trailing-newline rule wasn't actually gated (S4), bash-4-isms broke stock macOS
+bash 3.2 and Windows was unhandled (S5), plus template/doc drift (S6). See the
+retro for the corollary rule: an engine fix must be re-verified across ALL gates.
+A same-day **second pass** (adversarial multi-agent review of the fixes) then
+caught regressions the fixes themselves introduced — version-file deletion
+counting as a bump, last-assignment-only placeholder checks, non-ASCII filename
+skips, and more (R0–R8 in the retro) — proving fixes need the same scrutiny as
+bugs.
+
+## The cross-cutting change (v0.2.0)
 
 Both retros shared one root cause: ic-praxis imposed the **origin repo's shape** on
 every project. v0.2.0's answer is **core (always) + opt-in modules (selective)** —

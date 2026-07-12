@@ -22,8 +22,10 @@ hdr() { printf '\n%s== %s ==%s\n' "$CYA" "$1" "$RST"; }
 
 [ -d "$MEM" ] || { echo "no $MEM/ here — run from a scaffolded project root." >&2; exit 1; }
 
-# all memory files except the index
-mapfile -t FILES < <(find "$MEM" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' | sort)
+# all memory files except the index (no mapfile — bash 3.2/macOS compatible)
+FILES=()
+while IFS= read -r _f; do FILES+=("$_f"); done \
+  < <(find "$MEM" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' | sort)
 
 hdr "Growth"
 printf '  memory files: %s\n' "${#FILES[@]}"
@@ -46,7 +48,7 @@ fi
 
 hdr "Orphan memory files (on disk, not linked in MEMORY.md)"
 orphans=0
-for f in "${FILES[@]}"; do
+for f in ${FILES[@]+"${FILES[@]}"}; do   # guarded: empty array + set -u crashes bash <4.4
   base="$(basename "$f")"
   if ! grep -qF "$base" "$IDX" 2>/dev/null; then
     printf '  %s! %s%s  — add a line to MEMORY.md, or delete the file\n' "$YEL" "$base" "$RST"

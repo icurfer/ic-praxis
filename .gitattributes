@@ -1,0 +1,6 @@
+# Shell scripts and hooks must stay LF — CRLF breaks bash on Windows (Git Bash).
+# Covers this repo's own gate AND everything under templates/ that ships to users.
+*.sh text eol=lf
+.githooks/* text eol=lf
+templates/.githooks/* text eol=lf
+version text eol=lf

@@ -51,7 +51,9 @@ Do this:
 
 4. **`scripts/check-conventions.sh`** — set `AREA_CODE_RE`/`AREA_VFILE`,
    `FORBIDDEN_PATTERNS`, and (if enabled) `DEPLOY_MANIFESTS` to this project's real
-   deploy paths and taboos. The `key: value` secret gate already covers YAML/Helm.
+   deploy paths and taboos. The secret gate covers quoted values everywhere and
+   bare `key: value` / `KEY=value` in config-style files (`BARE_VALUE_FILES_RE`) —
+   widen that pattern if this project keeps config in unusual extensions.
 
 5. **`docs/`** — keep the four-stage structure; adjust folder names only if the
    user works in a different language. Leave `spec/scope/deferred/done` empty.
