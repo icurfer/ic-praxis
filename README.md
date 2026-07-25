@@ -60,6 +60,10 @@ drift** — so switching between Claude Code and Codex never splits the rules.
 Only using one agent? Delete the entrypoint you don't use — the gate only
 checks sync when both files exist.
 
+AI commits stay identifiable: `AGENTS.md` ships a `Co-Authored-By` trailer rule
+so Codex commits are marked as AI-assisted on GitHub, like Claude Code's
+automatic trailer. Team policy differs? `/praxis-init` asks and removes it.
+
 ---
 
 ## Architecture

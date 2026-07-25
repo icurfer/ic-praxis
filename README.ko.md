@@ -64,6 +64,10 @@ Codex를 오가며 써도 규칙이 갈라지지 않는다.
 에이전트를 하나만 쓴다면 안 쓰는 진입점을 지우면 된다 — 게이트는 두 파일이
 모두 있을 때만 동기화를 검사한다.
 
+AI 커밋은 식별 가능하게 유지된다: `AGENTS.md`에 `Co-Authored-By` trailer 규칙이
+실려 있어 Codex 커밋도 Claude Code의 자동 trailer처럼 GitHub에서 AI 관여로
+표시된다. 팀 정책이 다른가? `/praxis-init`이 물어보고 원치 않으면 제거한다.
+
 ---
 
 ## 아키텍처

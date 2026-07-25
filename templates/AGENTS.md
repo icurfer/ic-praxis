@@ -56,6 +56,17 @@ The mechanically-checkable rules above are enforced at commit time by
 When a retro produces a new checkable rule, add a gate to that script.
 <!-- praxis:shared:end -->
 
+## Commit attribution
+AI-agent commits should be identifiable as such on GitHub. End every commit
+message with this trailer (Claude Code adds its own equivalent automatically —
+GitHub renders the trailer as a co-author on the commit):
+
+```
+Co-Authored-By: Codex <noreply@openai.com>
+```
+
+Delete this section if your team's policy is to not mark AI involvement.
+
 ## Memory (agent-neutral, read on demand)
 Durable cross-session facts live in `.claude/memory/` — one fact per file,
 indexed in `.claude/memory/MEMORY.md`. The directory is plain markdown, not

@@ -20,7 +20,10 @@ build, and CI first):
    Ship the shared rules as a `<!-- praxis:shared:begin/end -->` marker block
    mirrored VERBATIM in both files, so Claude Code (reads `CLAUDE.md`) and
    Codex (reads `AGENTS.md`) follow the same law; agent-native notes (memory
-   routing, what auto-loads) go outside the block.
+   routing, what auto-loads) go outside the block. ASK the user whether
+   AI-agent commits should carry a `Co-Authored-By` trailer (team policy, not
+   auto-detectable); if yes, add a "Commit attribution" section to `AGENTS.md`
+   (Claude Code appends its own trailer automatically) — if no, leave it out.
 
 2. **`docs/`** — a four-stage flow: requirements backlog → spec → scope →
    deferred backlog → done report, plus a one-line `CHANGELOG.md`. Change is

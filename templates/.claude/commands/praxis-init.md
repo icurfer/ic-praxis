@@ -34,6 +34,16 @@ Do this:
      `TAG_REGEX` extracts the tag from the REAL file first:
      `sed -nE 's/.*<TAG_REGEX>.*/\1/p' <manifest>`.
 
+   - **AI commit attribution?** Ask the user: *"Should AI-agent commits be
+     marked as such on GitHub (a `Co-Authored-By` trailer)?"* This is team
+     policy and can't be auto-detected.
+     - **Yes** → keep the "Commit attribution" section in `AGENTS.md` (Claude
+       Code adds its own trailer automatically; the section makes Codex do the
+       same).
+     - **No** → DELETE that section from `AGENTS.md`, and tell the user that
+       Claude Code appends its trailer by itself — removing it needs their
+       Claude Code setting, not a repo file.
+
    - **multi-session?** Ask the user: *"Will this repo be run with several
      parallel Claude sessions (a hub coordinating multiple sub-units)?"* This
      can't be auto-detected.
