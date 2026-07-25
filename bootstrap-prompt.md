@@ -34,11 +34,6 @@ build, and CI first):
    patterns, and constitution drift (when both `CLAUDE.md` and `AGENTS.md`
    exist, their `praxis:shared` blocks must match byte-for-byte — one entrypoint
    silently missing rules the other has is how dual-agent repos split).
-   Also create thin Codex-native skill adapters in `.agents/skills/` for
-   `praxis-init`, `praxis-review`, and `verify-app`. Each adapter must point to
-   the existing canonical procedure under `.claude/commands/` or
-   `.claude/skills/` rather than duplicating it, so Codex discovers the
-   workflow without creating a second source that can drift.
    EVERY gate judges the **staged blob** (`git show ":$f"`), never the
    working tree, runs from the repo root, and disables `core.quotepath` so
    non-ASCII filenames aren't silently skipped. Match secrets in quoted form
@@ -58,10 +53,14 @@ build, and CI first):
    / reference / user), indexed in `MEMORY.md`; feedback/project facts include
    *why* and *how to apply*.
 
-5. **Verify skill** — keep the canonical reusable end-to-end verification
-   procedure (helpers + per-feature scenarios) in
-   `.claude/skills/verify-app/`, and add a Codex-native thin adapter at
-   `.agents/skills/verify-app/` instead of duplicating the procedure.
+5. **Verify skill + Codex adapters** — keep the canonical reusable end-to-end
+   verification procedure (helpers + per-feature scenarios) in
+   `.claude/skills/verify-app/`. Then add Codex-native thin adapters in
+   `.agents/skills/` for `praxis-init`, `praxis-review`, and `verify-app`:
+   each adapter only points to the existing canonical procedure
+   (`.claude/commands/<name>.md` or `.claude/skills/<name>/SKILL.md`) instead
+   of duplicating it, so Codex discovers the workflow without creating a
+   second source that can drift.
 
 Then apply ONLY the modules this repo's shape needs (skip the rest): **monorepo**
 (per-area version files), **deploy-manifest** (a gate syncing the version to a

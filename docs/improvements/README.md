@@ -14,7 +14,7 @@ back to the applied record rather than silently rewriting history.
 | Document | Status | Direction |
 |---|---|---|
 | [`applied/dual-agent-claude-codex.md`](applied/dual-agent-claude-codex.md) | Increments 1–2 shipped in **v0.4.0–v0.5.0** (2026-07-25); rest deferred | Agent-neutral rules with thin Claude Code / Codex entrypoints. Shipped: `AGENTS.md` + **Gate E**, capability matrix, and native Codex discovery adapters in `.agents/skills/` for init/review/verify. Deferred: `.praxis/` core extraction, `--agent` installer flag, and Codex hook/sub-agent adapters. |
-| [`applied/codex-native-skills.md`](applied/codex-native-skills.md) | Shipped in **v0.5.0** (2026-07-25) | Codex-native `.agents/skills/` thin adapters for init/review/verify, with one canonical workflow body and verified installer/gate behavior. |
+| [`applied/codex-native-skills.md`](applied/codex-native-skills.md) | Shipped in **v0.5.0** (2026-07-25); **v0.5.1** follow-up same day | Codex-native `.agents/skills/` thin adapters for init/review/verify, with one canonical workflow body and verified installer/gate behavior. v0.5.1: `praxis-review.sh` counts the adapters and reports **dangling adapters** (canon under `.claude/` deleted → adapter routes to nothing); bootstrap prompt's adapter instruction moved to the skill axis and names all three. |
 
 ### Revision notes — dual-agent (2026-07-25, v0.4.0)
 

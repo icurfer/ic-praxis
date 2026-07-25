@@ -5,6 +5,8 @@
 # This surfaces the sprawl that growth creates, so you can prune it:
 #   - orphan memory files   (exist on disk but not linked in MEMORY.md)
 #   - dangling index lines  (MEMORY.md points to a file that's gone)
+#   - dangling Codex adapters (.agents/skills/<name>/ whose canonical
+#     procedure under .claude/ was deleted — the adapter routes to nothing)
 #   - growth stats + the list of active gates
 #
 # Read-only. It reports and proposes; it never deletes. Run:
@@ -16,6 +18,7 @@ IDX="$MEM/MEMORY.md"
 GATE="scripts/check-conventions.sh"
 SKILLS=".claude/skills"
 AGENTS=".claude/agents"
+ADAPTERS=".agents/skills"   # Codex-native thin adapters (route to .claude/ canon)
 
 CYA=$'\033[36m'; YEL=$'\033[33m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
 hdr() { printf '\n%s== %s ==%s\n' "$CYA" "$1" "$RST"; }
@@ -45,6 +48,10 @@ if [ -d "$AGENTS" ]; then
   n="$(find "$AGENTS" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
   printf '  sub-agents in %s: %s\n' "$AGENTS" "$n"
 fi
+if [ -d "$ADAPTERS" ]; then
+  n="$(find "$ADAPTERS" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+  printf '  codex adapters in %s: %s\n' "$ADAPTERS" "$n"
+fi
 
 hdr "Orphan memory files (on disk, not linked in MEMORY.md)"
 orphans=0
@@ -67,6 +74,25 @@ while IFS= read -r link; do
   fi
 done < <(grep -E '^[[:space:]]*-[[:space:]]*\[' "$IDX" 2>/dev/null | grep -oE '\(([A-Za-z0-9_./-]+\.md)\)' | tr -d '()' | grep -v '^MEMORY.md$' || true)
 [ "$dangling" -eq 0 ] && printf '  %s✓ none%s\n' "$GRN" "$RST"
+
+# Adapters are thin by design — they route to a canonical procedure named after
+# the adapter (.claude/commands/<name>.md or .claude/skills/<name>/SKILL.md).
+# If the canon was deleted or renamed, the adapter still LOOKS installed but
+# routes to nothing; surface that instead of letting Codex discover a dead skill.
+if [ -d "$ADAPTERS" ]; then
+  hdr "Dangling Codex adapters ($ADAPTERS/ routes to a missing .claude/ canon)"
+  dangling_a=0
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    name="$(basename "$d")"
+    if [ ! -f ".claude/commands/$name.md" ] && [ ! -f ".claude/skills/$name/SKILL.md" ]; then
+      printf '  %s! %s%s  — no .claude/commands/%s.md or .claude/skills/%s/SKILL.md; restore the canon or delete the adapter\n' \
+        "$YEL" "$name" "$RST" "$name" "$name"
+      dangling_a=$((dangling_a+1))
+    fi
+  done < <(find "$ADAPTERS" -maxdepth 1 -mindepth 1 -type d | sort)
+  [ "$dangling_a" -eq 0 ] && printf '  %s✓ none%s\n' "$GRN" "$RST"
+fi
 
 hdr "Next"
 printf '  %sReview the rules themselves for staleness with:  /praxis-review%s\n' "$DIM" "$RST"
