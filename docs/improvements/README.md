@@ -1,18 +1,20 @@
-# Improvement retros — resolved history
+# Improvement retros
 
-These are real retros kept as **history**, not open work: two adoption retros
-(resolved in **v0.2.0**, 2026-07-12) and one deep self-review of the gate engine
-(resolved in **v0.3.0**, 2026-07-12). This is praxis eating its own cooking: an
-incident became a written record, which became an enforced change.
+The root of this directory stays as a compact index. Improvement documents that
+have been implemented move to [`applied/`](applied/) so completed work does not
+look like an active backlog. This is praxis eating its own cooking: an incident
+became a written record, which became an enforced change.
 
-Don't delete these — the *why* behind a rule is worth more than the rule. If you
-reopen or revise one, note it here rather than editing the source retro.
+Don't delete applied records — the *why* behind a rule is worth more than the
+rule. If you reopen one, write a new document at this directory's root and link
+back to the applied record rather than silently rewriting history.
 
-## Design proposals
+## Applied improvements
 
 | Document | Status | Direction |
 |---|---|---|
-| [`dual-agent-claude-codex.md`](dual-agent-claude-codex.md) | Increment 1 shipped in **v0.4.0** (2026-07-25); rest deferred | Agent-neutral rules with thin Claude Code / Codex entrypoints. Shipped: `AGENTS.md` mirroring `CLAUDE.md`'s `praxis:shared` block + **Gate E** (drift block) + capability matrix in the README. Deferred: `.praxis/` core extraction, `--agent` installer flag, native Codex hook/skill/sub-agent adapters. |
+| [`applied/dual-agent-claude-codex.md`](applied/dual-agent-claude-codex.md) | Increments 1–2 shipped in **v0.4.0–v0.5.0** (2026-07-25); rest deferred | Agent-neutral rules with thin Claude Code / Codex entrypoints. Shipped: `AGENTS.md` + **Gate E**, capability matrix, and native Codex discovery adapters in `.agents/skills/` for init/review/verify. Deferred: `.praxis/` core extraction, `--agent` installer flag, and Codex hook/sub-agent adapters. |
+| [`applied/codex-native-skills.md`](applied/codex-native-skills.md) | Shipped in **v0.5.0** (2026-07-25) | Codex-native `.agents/skills/` thin adapters for init/review/verify, with one canonical workflow body and verified installer/gate behavior. |
 
 ### Revision notes — dual-agent (2026-07-25, v0.4.0)
 
@@ -34,7 +36,7 @@ the "don't edit the source retro" rule):
   existing one) is preserved, not replaced. Separating "praxis installed" from
   "agent file exists" via a managed marker stays deferred (increment 2).
 
-## `from-aipf-mgmt.md` — monorepo / secret / k8s adoption (316-commit repo)
+## [`applied/from-aipf-mgmt.md`](applied/from-aipf-mgmt.md) — monorepo / secret / k8s adoption (316-commit repo)
 
 | # | Gap | Resolution in v0.2.0 |
 |---|---|---|
@@ -48,14 +50,14 @@ the "don't edit the source retro" rule):
 | P7 | `docs/` scaffold clashed with existing systems | install auto-skips docs when `CLAUDE.md` exists; `--no-docs` |
 | P8 | Quoting / `--all` / chmod scope | `-e` + array globs, chmod only copied files, `--all` scope documented |
 
-## `from-msa-fe.md` — multi-session hub operation (the "6th axis")
+## [`applied/from-msa-fe.md`](applied/from-msa-fe.md) — multi-session hub operation (the "6th axis")
 
 | # | Gap | Resolution in v0.2.0 |
 |---|---|---|
 | P0 | No multi-session coordination (silent hub overwrites) | **multi-session module**: `CLAUDE.md` multi-session rule + main-session-only hub writes |
 | P1 | `.claude/settings.json` + `.claude/agents/` axes had no scaffold | `templates/optional/multi-session/` ships `worker.md` + `settings.json`; `praxis-review.sh` now counts skills/agents (locale-robust) |
 
-## `from-self-review.md` — the gate engine audited against itself (v0.3.0)
+## [`applied/from-self-review.md`](applied/from-self-review.md) — the gate engine audited against itself (v0.3.0)
 
 Every gap **reproduced in a throwaway repo** before being fixed: bare (unquoted)
 secrets never matched (S0), the placeholder allowlist judged the line instead of

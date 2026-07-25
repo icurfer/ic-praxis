@@ -2,7 +2,8 @@
 #
 # ic-praxis installer — scaffold the discipline system INTO a project.
 #
-# It only copies the template files (CLAUDE.md, docs/, scripts/, .claude/, ...)
+# It only copies the template files (CLAUDE.md, AGENTS.md, docs/, scripts/,
+# .claude/, .agents/, ...)
 # into the target repo. It never leaves ic-praxis' own repo, .git, or
 # templates/ folder behind — so your project is not polluted.
 #
@@ -160,5 +161,6 @@ echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
 echo "  2) git-version the memory:         bash scripts/setup-claude-memory.sh"
 echo "  3) in Claude Code, customize:      /praxis-init <one line about your project>"
 echo "     (recommended — inspects the repo, tunes the gate & modules, proves it blocks a bad commit)"
-echo "  Codex? AGENTS.md carries the same rules — keep its praxis:shared block"
-echo "  in sync with CLAUDE.md's (the gate enforces this)."
+echo "     in Codex, customize:             \$praxis-init <one line about your project>"
+echo "  AGENTS.md carries the same rules; Gate E keeps its praxis:shared block"
+echo "  in sync with CLAUDE.md's."

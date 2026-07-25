@@ -33,7 +33,7 @@ A five-axis scaffold, dropped into any repo:
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
 | **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
 | **4. Shared memory** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | Cross-session facts, one per file, indexed — **git-versioned** so lessons survive resets and are shared with the team. Ships a few universal starter rules. |
-| **5. Verify skill** | `.claude/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts. |
+| **5. Verify skill** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts; Claude Code and Codex each get a native entrypoint to one canonical procedure. |
 
 The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule becomes a gate that can't be forgotten.**
 
@@ -54,8 +54,8 @@ drift** — so switching between Claude Code and Codex never splits the rules.
 | Constitution | `CLAUDE.md` — native | `AGENTS.md` — native, **drift-gated** against `CLAUDE.md` |
 | Commit gate + `docs/` flow | portable (agent-independent) | portable |
 | Memory `.claude/memory/` | auto-loaded each session | read-on-demand — `AGENTS.md` routes to the `MEMORY.md` index |
-| Skills `.claude/skills/` | native discovery | plain-markdown procedures, no auto-discovery |
-| Hooks / sub-agents (`.claude/settings.json`, `.claude/agents/`) | native-only | not yet (adapters planned) |
+| Skills | `.claude/skills/` — native | `.agents/skills/` — native thin adapters to the same canonical procedures |
+| Hooks / sub-agents (`.claude/settings.json`, `.claude/agents/`) | native | Codex supports native equivalents, but praxis adapters are not shipped yet |
 
 Only using one agent? Delete the entrypoint you don't use — the gate only
 checks sync when both files exist.
@@ -140,10 +140,15 @@ Then, inside Claude Code:
 /praxis-init  <one line describing your project>
 ```
 
-Using Codex? There are no slash commands, but `/praxis-init` is just a prompt
-file — tell Codex: *"Follow the instructions in `.claude/commands/praxis-init.md`;
-my project is: \<one line\>"*. Same procedure, same result: both `CLAUDE.md` and
-`AGENTS.md` get filled from one shared rule block, and the gate keeps them in sync.
+Using Codex? The scaffold installs a native repo skill:
+
+```
+$praxis-init  <one line describing your project>
+```
+
+The thin `.agents/skills/praxis-init/` adapter follows the same canonical
+procedure as Claude Code, so both `CLAUDE.md` and `AGENTS.md` get filled from
+one shared rule block and the gate keeps them in sync.
 
 `/praxis-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md`
 and the gate, **detects your project shape and confirms with you which modules to
@@ -211,9 +216,9 @@ flowchart TD
     N["New convention / lesson"] --> Q1{"Checkable at<br/>commit time?"}
     Q1 -- yes --> GATE["🔒 git pre-commit gate<br/>scripts/check-conventions.sh"]
     Q1 -- no --> Q2{"Should fire during the agent's<br/>tool use? block / modify / react"}
-    Q2 -- yes --> HOOK["🪝 agent hook<br/>Claude Code: .claude/settings.json<br/>Codex: adapter planned"]
+    Q2 -- yes --> HOOK["🪝 agent hook<br/>Claude Code adapter shipped<br/>Codex praxis adapter planned"]
     Q2 -- no --> Q3{"Repeatable multi-step<br/>procedure?"}
-    Q3 -- yes --> SKILL["🧩 skill<br/>.claude/skills/"]
+    Q3 -- yes --> SKILL["🧩 skill<br/>.claude/skills/ + .agents/skills/"]
     Q3 -- no --> Q4{"Durable fact to recall<br/>when relevant?"}
     Q4 -- yes --> MEM["🧠 memory<br/>.claude/memory/"]
     Q4 -- no --> RULE["📜 always-on rule<br/>constitution shared block<br/>(CLAUDE.md + AGENTS.md)"]
@@ -225,8 +230,8 @@ the agent-native file it lands in is just that layer's adapter.
 | Home | Fires when | Put here |
 |---|---|---|
 | **git gate** `check-conventions.sh` | every `git commit` — any agent, any human | mechanically checkable musts (version bump, secrets, file format, constitution drift) |
-| **agent hook** — Claude Code: `.claude/settings.json` *(native-only today; Codex adapter planned)* | a matching tool call, mid-work | block / auto-fix / react to an agent action (format-on-write, block a path) |
-| **skill** `.claude/skills/` *(native discovery in Claude Code; plain markdown any agent can read)* | a matching task, on demand | repeatable procedures (verify, deploy) |
+| **agent hook** — Claude Code: `.claude/settings.json` *(Codex has native hooks; praxis adapter not shipped yet)* | a matching tool call, mid-work | block / auto-fix / react to an agent action (format-on-write, block a path) |
+| **skill** — `.claude/skills/` for Claude Code, `.agents/skills/` thin adapters for Codex | a matching task, on demand | repeatable procedures (init, review, verify) with one canonical workflow |
 | **memory** `.claude/memory/` *(auto-loaded in Claude Code; `AGENTS.md` routes Codex to the index)* | recalled by relevance | durable project facts & feedback |
 | **constitution rule** — the `praxis:shared` block in `CLAUDE.md` + `AGENTS.md` | every session, always loaded | judgment conventions the agent must always keep |
 

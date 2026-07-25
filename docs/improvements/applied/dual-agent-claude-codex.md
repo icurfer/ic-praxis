@@ -1,6 +1,6 @@
 # Claude Code + Codex 동시 사용을 위한 agent-neutral praxis 설계
 
-- 상태: **증분 1 구현됨 (v0.4.0, 2026-07-25)** — `AGENTS.md` + 공유 블록 drift 게이트(Gate E) + capability matrix. `.praxis/` 코어 추출, `--agent` 플래그, native adapter는 미구현. 구현 시 개정된 사항은 [`README.md`](README.md)의 Revision notes 참조.
+- 상태: **증분 1 구현됨 (v0.4.0, 2026-07-25)** — `AGENTS.md` + 공유 블록 drift 게이트(Gate E) + capability matrix. `.praxis/` 코어 추출, `--agent` 플래그, native adapter는 미구현. 구현 시 개정된 사항은 [`README.md`](../README.md)의 Revision notes 참조.
 - 작성일: 2026-07-25
 - 배경: 한 프로젝트에서 Claude Code와 Codex를 함께 사용하는 운영 방식
 

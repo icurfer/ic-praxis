@@ -66,7 +66,9 @@ re-learning them every session.
 ## What auto-loads here and what doesn't
 The commit gate (`.githooks/pre-commit` → `scripts/check-conventions.sh`) is a
 git hook — it fires no matter which agent (or human) makes the commit.
-Claude-native surfaces (`.claude/skills/`, `.claude/settings.json` hooks,
-`.claude/agents/`) do NOT auto-load for AGENTS.md readers; they are still plain
-markdown/JSON — `.claude/skills/*/SKILL.md` are repeatable procedures you can
-read and follow when the task matches.
+Codex discovers the native adapters in `.agents/skills/`; each adapter routes to
+the matching canonical procedure under `.claude/commands/` or
+`.claude/skills/`, so the workflow has one maintained source. Claude-native
+hooks and sub-agents (`.claude/settings.json`, `.claude/agents/`) do not
+auto-load in Codex; only use them as plain reference material unless an
+equivalent Codex adapter is installed.

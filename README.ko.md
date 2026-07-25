@@ -37,7 +37,7 @@
 | **2. 4단 문서 체계** | `docs/` | 변경이 코드가 되기 전에 spec → scope → backlog → done 흐름으로 문서화된다. |
 | **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. |
 | **4. 공유 메모리** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | 세션을 넘어 지속되는 사실을 파일 1개=사실 1개로 인덱싱 — **git으로 버전 관리**돼 초기화돼도 교훈이 살아남고 팀과 공유된다. 범용 스타터 규칙 몇 개 포함. |
-| **5. 검증 스킬** | `.claude/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증. |
+| **5. 검증 스킬** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증. Claude Code와 Codex가 하나의 정본 절차로 이어지는 각자의 네이티브 진입점을 가진다. |
 
 핵심은 축 3이 축 1로 이어지는 고리다: **검증 가능한 규칙을 낳은 회고는, 잊을 수 없는 게이트가 된다.**
 
@@ -58,8 +58,8 @@ Codex를 오가며 써도 규칙이 갈라지지 않는다.
 | 헌법 | `CLAUDE.md` — 네이티브 | `AGENTS.md` — 네이티브, `CLAUDE.md`와 **drift 게이트** |
 | 커밋 게이트 + `docs/` 흐름 | portable (에이전트 무관) | portable |
 | 메모리 `.claude/memory/` | 매 세션 자동 로드 | 필요 시 읽기 — `AGENTS.md`가 `MEMORY.md` 인덱스로 라우팅 |
-| 스킬 `.claude/skills/` | 네이티브 발견 | 일반 마크다운 절차, 자동 발견 없음 |
-| 훅 / 서브에이전트 (`.claude/settings.json`, `.claude/agents/`) | native-only | 아직 없음 (adapter 예정) |
+| 스킬 | `.claude/skills/` — 네이티브 | `.agents/skills/` — 같은 정본 절차로 이어지는 네이티브 thin adapter |
+| 훅 / 서브에이전트 (`.claude/settings.json`, `.claude/agents/`) | 네이티브 | Codex도 네이티브 기능을 지원하지만 praxis adapter는 아직 제공하지 않음 |
 
 에이전트를 하나만 쓴다면 안 쓰는 진입점을 지우면 된다 — 게이트는 두 파일이
 모두 있을 때만 동기화를 검사한다.
@@ -142,10 +142,15 @@ flowchart LR
 /praxis-init  <프로젝트를 한 줄로 설명>
 ```
 
-Codex를 쓰는가? slash command는 없지만 `/praxis-init`은 그냥 프롬프트 파일이다 —
-Codex에게 이렇게 말하면 된다: *"`.claude/commands/praxis-init.md`의 지시를 따라줘.
-내 프로젝트는: \<한 줄\>"*. 같은 절차, 같은 결과: `CLAUDE.md`와 `AGENTS.md`가
-하나의 공유 규칙 블록에서 채워지고, 게이트가 둘의 동기화를 유지한다.
+Codex를 쓰는가? 스캐폴드가 레포 네이티브 스킬을 설치한다:
+
+```
+$praxis-init  <프로젝트를 한 줄로 설명>
+```
+
+`.agents/skills/praxis-init/`의 thin adapter가 Claude Code와 같은 정본 절차를
+따르므로, `CLAUDE.md`와 `AGENTS.md`가 하나의 공유 규칙 블록에서 채워지고
+게이트가 둘의 동기화를 유지한다.
 
 `/praxis-init`은 레포를 분석해 `CLAUDE.md`와 게이트의 모든 `{{placeholder}}`를 채우고,
 **프로젝트 형태를 감지해 어떤 모듈을 켤지 당신과 확인**하고, 게이트를 실제 배포 경로에
@@ -211,9 +216,9 @@ flowchart TD
     N["새 컨벤션 / 교훈"] --> Q1{"커밋 시점에<br/>검증 가능한가?"}
     Q1 -- 예 --> GATE["🔒 git pre-commit 게이트<br/>scripts/check-conventions.sh"]
     Q1 -- 아니오 --> Q2{"에이전트의 툴 사용 중에<br/>발동해야 하나? 차단/수정/반응"}
-    Q2 -- 예 --> HOOK["🪝 에이전트 훅<br/>Claude Code: .claude/settings.json<br/>Codex: adapter 예정"]
+    Q2 -- 예 --> HOOK["🪝 에이전트 훅<br/>Claude Code adapter 제공<br/>Codex praxis adapter 예정"]
     Q2 -- 아니오 --> Q3{"반복되는 다단계<br/>절차인가?"}
-    Q3 -- 예 --> SKILL["🧩 스킬<br/>.claude/skills/"]
+    Q3 -- 예 --> SKILL["🧩 스킬<br/>.claude/skills/ + .agents/skills/"]
     Q3 -- 아니오 --> Q4{"관련될 때 떠올릴<br/>지속적 사실인가?"}
     Q4 -- 예 --> MEM["🧠 메모리<br/>.claude/memory/"]
     Q4 -- 아니오 --> RULE["📜 상시 규칙<br/>헌법 공유 블록<br/>(CLAUDE.md + AGENTS.md)"]
@@ -225,8 +230,8 @@ flowchart TD
 | 자리 | 발동 시점 | 여기에 넣는 것 |
 |---|---|---|
 | **git 게이트** `check-conventions.sh` | 매 `git commit` — 어떤 에이전트든, 사람이든 | 기계로 검증되는 필수(version bump·시크릿·파일 형식·헌법 drift) |
-| **에이전트 훅** — Claude Code: `.claude/settings.json` *(현재 native-only; Codex adapter 예정)* | 매칭되는 툴 호출, 작업 도중 | 에이전트 행동을 차단/자동수정/반응(쓰기 시 포맷, 경로 차단) |
-| **스킬** `.claude/skills/` *(Claude Code는 네이티브 발견; 어떤 에이전트든 읽을 수 있는 일반 마크다운)* | 매칭되는 작업, 필요 시 | 반복 절차(검증·배포) |
+| **에이전트 훅** — Claude Code: `.claude/settings.json` *(Codex도 네이티브 훅을 지원하지만 praxis adapter는 아직 미제공)* | 매칭되는 툴 호출, 작업 도중 | 에이전트 행동을 차단/자동수정/반응(쓰기 시 포맷, 경로 차단) |
+| **스킬** — Claude Code는 `.claude/skills/`, Codex는 `.agents/skills/` thin adapter | 매칭되는 작업, 필요 시 | 하나의 정본 workflow를 쓰는 반복 절차(init·review·verify) |
 | **메모리** `.claude/memory/` *(Claude Code는 자동 로드; Codex는 `AGENTS.md`가 인덱스로 라우팅)* | 관련성으로 소환 | 지속적 프로젝트 사실·피드백 |
 | **헌법 규칙** — `CLAUDE.md` + `AGENTS.md`의 `praxis:shared` 블록 | 매 세션 상시 로드 | 에이전트가 항상 지켜야 할 판단 컨벤션 |
 

@@ -70,3 +70,12 @@ More mechanical / more frequent ⇒ harder layer:
 - always-on judgment → a line in this file
 Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
 <!-- praxis:shared:end -->
+
+## Codex-native project assets
+
+The shipped Codex adapters live under `templates/.agents/skills/`. When their
+workflow changes, update the canonical procedure under
+`templates/.claude/commands/` or `templates/.claude/skills/` first and keep the
+adapter thin. Durable self-dogfooding facts live in `.claude/memory/`; read
+`.claude/memory/MEMORY.md` and the matching fact file when a task touches one
+of its topics.
