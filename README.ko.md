@@ -73,17 +73,19 @@ Codex를 오가며 써도 규칙이 갈라지지 않는다.
 ```mermaid
 flowchart TB
     subgraph WRITE["✍️ 규칙을 쓴다"]
-        A1["① CLAUDE.md<br/>헌법"]
+        A1["① 헌법<br/>CLAUDE.md + AGENTS.md<br/>(공유 블록 하나, drift 게이트)"]
         A2["② docs/<br/>4단 흐름"]
     end
     subgraph ENFORCE["🔒 커밋 시점에 강제한다"]
-        A3["③ pre-commit 게이트<br/>check-conventions.sh"]
+        A3["③ pre-commit 게이트<br/>check-conventions.sh<br/>(어떤 에이전트든 — 사람이든 발동)"]
     end
     subgraph RETAIN["🧠 교훈을 간직한다"]
-        A4["④ .claude/memory/"]
+        A4["④ 공유 메모리<br/>.claude/memory/ (일반 마크다운)"]
         A5["⑤ verify-app 스킬"]
     end
 
+    CC(["🤖 Claude Code"]) -. "CLAUDE.md를 읽음" .-> A1
+    CX(["🤖 Codex"]) -. "AGENTS.md를 읽음" .-> A1
     A1 -- "검증 가능한 규칙은<br/>게이트가 된다" --> A3
     A2 -- "검증 가능한 규칙은<br/>게이트가 된다" --> A3
     A3 == "차단된 커밋이<br/>새 규칙을 가르친다" ==> A1
@@ -129,7 +131,7 @@ flowchart LR
 
 **A. AI 에이전트와 함께 도입 (권장)**
 
-에이전트(Claude Code)에게 이 레포를 가리키며 이렇게 말한다:
+에이전트(Claude Code 또는 Codex)에게 이 레포를 가리키며 이렇게 말한다:
 
 > "https://github.com/icurfer/ic-praxis 의 curl 원라이너로 이 프로젝트에 ic-praxis
 > 스캐폴드를 구성해줘 (레포를 프로젝트 안에 clone하지 말고), 그다음 /praxis-init를 돌려."
@@ -139,6 +141,11 @@ flowchart LR
 ```
 /praxis-init  <프로젝트를 한 줄로 설명>
 ```
+
+Codex를 쓰는가? slash command는 없지만 `/praxis-init`은 그냥 프롬프트 파일이다 —
+Codex에게 이렇게 말하면 된다: *"`.claude/commands/praxis-init.md`의 지시를 따라줘.
+내 프로젝트는: \<한 줄\>"*. 같은 절차, 같은 결과: `CLAUDE.md`와 `AGENTS.md`가
+하나의 공유 규칙 블록에서 채워지고, 게이트가 둘의 동기화를 유지한다.
 
 `/praxis-init`은 레포를 분석해 `CLAUDE.md`와 게이트의 모든 `{{placeholder}}`를 채우고,
 **프로젝트 형태를 감지해 어떤 모듈을 켤지 당신과 확인**하고, 게이트를 실제 배포 경로에
@@ -182,7 +189,7 @@ bash scripts/setup-claude-memory.sh  # 메모리 git 버전 관리 + 매 세션 
 
 ```mermaid
 flowchart LR
-    I["💥 사고<br/>무언가 깨짐"] --> W["CLAUDE.md / docs 에<br/>규칙으로 적기"]
+    I["💥 사고<br/>무언가 깨짐"] --> W["헌법 / docs 에<br/>규칙으로 적기"]
     W --> Q{"기계로<br/>검증 가능한가?"}
     Q -- 예 --> G["check-conventions.sh 에<br/>게이트 추가"]
     Q -- 아니오 --> R["적어둔 규칙으로 남음<br/>(에이전트가 준수)"]
@@ -204,21 +211,24 @@ flowchart TD
     N["새 컨벤션 / 교훈"] --> Q1{"커밋 시점에<br/>검증 가능한가?"}
     Q1 -- 예 --> GATE["🔒 git pre-commit 게이트<br/>scripts/check-conventions.sh"]
     Q1 -- 아니오 --> Q2{"에이전트의 툴 사용 중에<br/>발동해야 하나? 차단/수정/반응"}
-    Q2 -- 예 --> HOOK["🪝 Claude Code 훅<br/>.claude/settings.json"]
+    Q2 -- 예 --> HOOK["🪝 에이전트 훅<br/>Claude Code: .claude/settings.json<br/>Codex: adapter 예정"]
     Q2 -- 아니오 --> Q3{"반복되는 다단계<br/>절차인가?"}
     Q3 -- 예 --> SKILL["🧩 스킬<br/>.claude/skills/"]
     Q3 -- 아니오 --> Q4{"관련될 때 떠올릴<br/>지속적 사실인가?"}
     Q4 -- 예 --> MEM["🧠 메모리<br/>.claude/memory/"]
-    Q4 -- 아니오 --> RULE["📜 상시 규칙<br/>CLAUDE.md"]
+    Q4 -- 아니오 --> RULE["📜 상시 규칙<br/>헌법 공유 블록<br/>(CLAUDE.md + AGENTS.md)"]
 ```
+
+**의미 계층을 먼저** 고른다(게이트 / 훅 / 스킬 / 메모리 / 상시 규칙); 그 규칙이
+놓이는 에이전트-네이티브 파일은 해당 계층의 adapter일 뿐이다.
 
 | 자리 | 발동 시점 | 여기에 넣는 것 |
 |---|---|---|
-| **git 게이트** `check-conventions.sh` | 매 `git commit` | 기계로 검증되는 필수(version bump·시크릿·파일 형식) |
-| **Claude Code 훅** `.claude/settings.json` | 매칭되는 툴 호출, 작업 도중 | 에이전트 행동을 차단/자동수정/반응(쓰기 시 포맷, 경로 차단) |
-| **스킬** `.claude/skills/` | 매칭되는 작업, 필요 시 | 반복 절차(검증·배포) |
-| **메모리** `.claude/memory/` | 관련성으로 소환 | 지속적 프로젝트 사실·피드백 |
-| **CLAUDE.md 규칙** | 매 세션 상시 로드 | 에이전트가 항상 지켜야 할 판단 컨벤션 |
+| **git 게이트** `check-conventions.sh` | 매 `git commit` — 어떤 에이전트든, 사람이든 | 기계로 검증되는 필수(version bump·시크릿·파일 형식·헌법 drift) |
+| **에이전트 훅** — Claude Code: `.claude/settings.json` *(현재 native-only; Codex adapter 예정)* | 매칭되는 툴 호출, 작업 도중 | 에이전트 행동을 차단/자동수정/반응(쓰기 시 포맷, 경로 차단) |
+| **스킬** `.claude/skills/` *(Claude Code는 네이티브 발견; 어떤 에이전트든 읽을 수 있는 일반 마크다운)* | 매칭되는 작업, 필요 시 | 반복 절차(검증·배포) |
+| **메모리** `.claude/memory/` *(Claude Code는 자동 로드; Codex는 `AGENTS.md`가 인덱스로 라우팅)* | 관련성으로 소환 | 지속적 프로젝트 사실·피드백 |
+| **헌법 규칙** — `CLAUDE.md` + `AGENTS.md`의 `praxis:shared` 블록 | 매 세션 상시 로드 | 에이전트가 항상 지켜야 할 판단 컨벤션 |
 
 원칙: **더 기계적이고 더 자주 발동해야 할수록 더 단단한 레이어**(게이트 → 훅 → 스킬
 → 메모리 → 상시 규칙). 좁은 규칙을 상시 로드 레이어에 넣으면 무관한 모든 세션에

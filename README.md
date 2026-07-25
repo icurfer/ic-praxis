@@ -69,17 +69,19 @@ The five axes split into three jobs — *write* rules, *enforce* them, *retain* 
 ```mermaid
 flowchart TB
     subgraph WRITE["✍️ Write the rules"]
-        A1["① CLAUDE.md<br/>constitution"]
+        A1["① Constitution<br/>CLAUDE.md + AGENTS.md<br/>(one shared block, drift-gated)"]
         A2["② docs/<br/>four-stage flow"]
     end
     subgraph ENFORCE["🔒 Enforce at commit time"]
-        A3["③ pre-commit gate<br/>check-conventions.sh"]
+        A3["③ pre-commit gate<br/>check-conventions.sh<br/>(fires for ANY agent — or human)"]
     end
     subgraph RETAIN["🧠 Retain the lessons"]
-        A4["④ .claude/memory/"]
+        A4["④ shared memory<br/>.claude/memory/ (plain markdown)"]
         A5["⑤ verify-app skill"]
     end
 
+    CC(["🤖 Claude Code"]) -. "reads CLAUDE.md" .-> A1
+    CX(["🤖 Codex"]) -. "reads AGENTS.md" .-> A1
     A1 -- "checkable rules<br/>become gates" --> A3
     A2 -- "checkable rules<br/>become gates" --> A3
     A3 == "a blocked commit<br/>teaches a new rule" ==> A1
@@ -127,7 +129,7 @@ flowchart LR
 
 **A. Adopt with an AI agent (recommended)**
 
-Point your agent (Claude Code) at this repo and say:
+Point your agent (Claude Code or Codex) at this repo and say:
 
 > "Scaffold ic-praxis into this project using the curl one-liner from
 > https://github.com/icurfer/ic-praxis (do not clone it into the project), then run /praxis-init."
@@ -137,6 +139,11 @@ Then, inside Claude Code:
 ```
 /praxis-init  <one line describing your project>
 ```
+
+Using Codex? There are no slash commands, but `/praxis-init` is just a prompt
+file — tell Codex: *"Follow the instructions in `.claude/commands/praxis-init.md`;
+my project is: \<one line\>"*. Same procedure, same result: both `CLAUDE.md` and
+`AGENTS.md` get filled from one shared rule block, and the gate keeps them in sync.
 
 `/praxis-init` inspects your repo, fills every `{{placeholder}}` in `CLAUDE.md`
 and the gate, **detects your project shape and confirms with you which modules to
@@ -182,7 +189,7 @@ generic until an agent tunes it to this project.
 
 ```mermaid
 flowchart LR
-    I["💥 Incident<br/>something breaks"] --> W["Write the rule<br/>in CLAUDE.md / docs"]
+    I["💥 Incident<br/>something breaks"] --> W["Write the rule<br/>in the constitution / docs"]
     W --> Q{"Mechanically<br/>checkable?"}
     Q -- yes --> G["Add a gate in<br/>check-conventions.sh"]
     Q -- no --> R["Stays a written rule<br/>(agent-enforced)"]
@@ -204,21 +211,24 @@ flowchart TD
     N["New convention / lesson"] --> Q1{"Checkable at<br/>commit time?"}
     Q1 -- yes --> GATE["🔒 git pre-commit gate<br/>scripts/check-conventions.sh"]
     Q1 -- no --> Q2{"Should fire during the agent's<br/>tool use? block / modify / react"}
-    Q2 -- yes --> HOOK["🪝 Claude Code hook<br/>.claude/settings.json"]
+    Q2 -- yes --> HOOK["🪝 agent hook<br/>Claude Code: .claude/settings.json<br/>Codex: adapter planned"]
     Q2 -- no --> Q3{"Repeatable multi-step<br/>procedure?"}
     Q3 -- yes --> SKILL["🧩 skill<br/>.claude/skills/"]
     Q3 -- no --> Q4{"Durable fact to recall<br/>when relevant?"}
     Q4 -- yes --> MEM["🧠 memory<br/>.claude/memory/"]
-    Q4 -- no --> RULE["📜 always-on rule<br/>CLAUDE.md"]
+    Q4 -- no --> RULE["📜 always-on rule<br/>constitution shared block<br/>(CLAUDE.md + AGENTS.md)"]
 ```
+
+Pick the **semantic layer first** (gate / hook / skill / memory / always-on);
+the agent-native file it lands in is just that layer's adapter.
 
 | Home | Fires when | Put here |
 |---|---|---|
-| **git gate** `check-conventions.sh` | every `git commit` | mechanically checkable musts (version bump, secrets, file format) |
-| **Claude Code hook** `.claude/settings.json` | a matching tool call, mid-work | block / auto-fix / react to an agent action (format-on-write, block a path) |
-| **skill** `.claude/skills/` | a matching task, on demand | repeatable procedures (verify, deploy) |
-| **memory** `.claude/memory/` | recalled by relevance | durable project facts & feedback |
-| **CLAUDE.md rule** | every session, always loaded | judgment conventions the agent must always keep |
+| **git gate** `check-conventions.sh` | every `git commit` — any agent, any human | mechanically checkable musts (version bump, secrets, file format, constitution drift) |
+| **agent hook** — Claude Code: `.claude/settings.json` *(native-only today; Codex adapter planned)* | a matching tool call, mid-work | block / auto-fix / react to an agent action (format-on-write, block a path) |
+| **skill** `.claude/skills/` *(native discovery in Claude Code; plain markdown any agent can read)* | a matching task, on demand | repeatable procedures (verify, deploy) |
+| **memory** `.claude/memory/` *(auto-loaded in Claude Code; `AGENTS.md` routes Codex to the index)* | recalled by relevance | durable project facts & feedback |
+| **constitution rule** — the `praxis:shared` block in `CLAUDE.md` + `AGENTS.md` | every session, always loaded | judgment conventions the agent must always keep |
 
 Rule of thumb: **the more mechanical and the more often it must fire, the harder the
 layer** (gate → hook → skill → memory → always-on rule). Putting a narrow rule in an
