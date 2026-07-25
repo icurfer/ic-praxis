@@ -74,13 +74,15 @@ fi
 mkdir -p "$TARGET"
 echo "→ scaffolding into: $(cd "$TARGET" && pwd)"
 
-# If the constitution won't be installed (already present, not forced), the docs/
-# scaffold would land as orphan empty folders with nothing explaining them. Skip
-# it and say so — don't drop a doc system on top of an existing one. (P7)
+# If a constitution entrypoint already exists (and we're not forcing), this repo
+# already has a convention system — the docs/ scaffold would land as orphan empty
+# folders with nothing explaining them. Skip it and say so — don't drop a doc
+# system on top of an existing one. (P7; extended in v0.4.0: CLAUDE.md OR
+# AGENTS.md counts, since either marks an agent-governed repo.)
 skip_docs=$NO_DOCS
-if [ -e "$TARGET/CLAUDE.md" ] && [ "$FORCE" -ne 1 ] && [ "$NO_DOCS" -eq 0 ]; then
+if { [ -e "$TARGET/CLAUDE.md" ] || [ -e "$TARGET/AGENTS.md" ]; } && [ "$FORCE" -ne 1 ] && [ "$NO_DOCS" -eq 0 ]; then
   skip_docs=1
-  echo "  note: CLAUDE.md exists → skipping docs/ scaffold (pass --force to add it anyway)."
+  echo "  note: CLAUDE.md/AGENTS.md exists → skipping docs/ scaffold (pass --force to add it anyway)."
 fi
 
 copied=0 skipped=0
@@ -158,3 +160,5 @@ echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
 echo "  2) git-version the memory:         bash scripts/setup-claude-memory.sh"
 echo "  3) in Claude Code, customize:      /praxis-init <one line about your project>"
 echo "     (recommended — inspects the repo, tunes the gate & modules, proves it blocks a bad commit)"
+echo "  Codex? AGENTS.md carries the same rules — keep its praxis:shared block"
+echo "  in sync with CLAUDE.md's (the gate enforces this)."

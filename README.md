@@ -29,7 +29,7 @@ A five-axis scaffold, dropped into any repo:
 
 | Axis | File(s) | What it does |
 |---|---|---|
-| **1. Constitution** | `CLAUDE.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). |
+| **1. Constitution** | `CLAUDE.md` + `AGENTS.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). One shared rule block, mirrored in both files and **drift-gated** — Claude Code and Codex read the same law. |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
 | **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
 | **4. Shared memory** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | Cross-session facts, one per file, indexed — **git-versioned** so lessons survive resets and are shared with the team. Ships a few universal starter rules. |
@@ -40,6 +40,25 @@ The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule bec
 Those five are the **core** — always applied. Shape-specific concerns (monorepo,
 multiple parallel sessions, k8s deploy) are [opt-in modules](#selective-application--modules)
 you turn on only where they fit, so a simple repo stays simple.
+
+### Which agents does it work with?
+
+Praxis owns the rules; agents only provide entrypoints. The enforcement layer
+(git hook) is agent-neutral by construction — it fires no matter *what* staged
+the commit. The constitution ships as two native entrypoints sharing one
+marker-delimited rule block, and **Gate E blocks any commit where the two
+drift** — so switching between Claude Code and Codex never splits the rules.
+
+| Layer | Claude Code | Codex (`AGENTS.md` readers) |
+|---|---|---|
+| Constitution | `CLAUDE.md` — native | `AGENTS.md` — native, **drift-gated** against `CLAUDE.md` |
+| Commit gate + `docs/` flow | portable (agent-independent) | portable |
+| Memory `.claude/memory/` | auto-loaded each session | read-on-demand — `AGENTS.md` routes to the `MEMORY.md` index |
+| Skills `.claude/skills/` | native discovery | plain-markdown procedures, no auto-discovery |
+| Hooks / sub-agents (`.claude/settings.json`, `.claude/agents/`) | native-only | not yet (adapters planned) |
+
+Only using one agent? Delete the entrypoint you don't use — the gate only
+checks sync when both files exist.
 
 ---
 
@@ -79,10 +98,12 @@ flowchart LR
     S --> G1{"deploy code changed<br/>but version not bumped?"}
     S --> G2{"version file<br/>malformed?"}
     S --> G3{"secret / taboo<br/>pattern present?"}
+    S --> G4{"CLAUDE.md ↔ AGENTS.md<br/>rules drifted?"}
     G1 -- yes --> X["🚫 commit blocked<br/>+ reason printed"]
     G2 -- yes --> X
     G3 -- yes --> X
-    G1 & G2 & G3 -- all clear --> OK["✅ commit proceeds"]
+    G4 -- yes --> X
+    G1 & G2 & G3 & G4 -- all clear --> OK["✅ commit proceeds"]
     X -. "fix, or --no-verify<br/>to bypass" .-> C
 ```
 

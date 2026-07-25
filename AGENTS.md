@@ -1,3 +1,10 @@
+<!--
+  AGENTS.md — ic-praxis' own constitution for AGENTS.md-reading agents (Codex).
+  The marker block below is a VERBATIM mirror of CLAUDE.md's; Gate E in
+  scripts/check-conventions.sh blocks the commit if the two drift. Edit shared
+  rules in either file, then copy the block into the other and stage both.
+-->
+
 <!-- praxis:shared:begin -->
 # ic-praxis — project constitution
 

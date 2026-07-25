@@ -8,11 +8,31 @@ incident became a written record, which became an enforced change.
 Don't delete these — the *why* behind a rule is worth more than the rule. If you
 reopen or revise one, note it here rather than editing the source retro.
 
-## Design proposals — not yet implemented
+## Design proposals
 
 | Document | Status | Direction |
 |---|---|---|
-| [`dual-agent-claude-codex.md`](dual-agent-claude-codex.md) | Proposed, 2026-07-25 | Extract an agent-neutral `.praxis/` core and generate thin Claude Code / Codex adapters without splitting the rules |
+| [`dual-agent-claude-codex.md`](dual-agent-claude-codex.md) | Increment 1 shipped in **v0.4.0** (2026-07-25); rest deferred | Agent-neutral rules with thin Claude Code / Codex entrypoints. Shipped: `AGENTS.md` mirroring `CLAUDE.md`'s `praxis:shared` block + **Gate E** (drift block) + capability matrix in the README. Deferred: `.praxis/` core extraction, `--agent` installer flag, native Codex hook/skill/sub-agent adapters. |
+
+### Revision notes — dual-agent (2026-07-25, v0.4.0)
+
+Implementation review corrected two points of the proposal (recorded here per
+the "don't edit the source retro" rule):
+
+- **No renderer.** Instead of generating both entrypoints from a new
+  `.praxis/constitution.md`, the shared rules live in a marker-delimited block
+  (`<!-- praxis:shared:begin/end -->`) carried verbatim by BOTH files, and
+  Gate E in the existing gate engine enforces byte-identity. Same drift
+  guarantee, no new build step, no new source-of-truth tree.
+- **`/praxis-init` is not shellable.** The proposal's `scripts/praxis-init.sh`
+  can't exist — init is agent judgment (inspect repo → confirm modules → fill
+  placeholders), i.e. a prompt, not a script. Only structural checks
+  (`praxis-review.sh`) belong in shell.
+- **P7 revised (extended):** the installer's "constitution exists → skip docs
+  scaffold" proxy now counts `CLAUDE.md` **or** `AGENTS.md` — either marks an
+  agent-governed repo. The v0.2.0 rationale (don't drop a doc system on an
+  existing one) is preserved, not replaced. Separating "praxis installed" from
+  "agent file exists" via a managed marker stays deferred (increment 2).
 
 ## `from-aipf-mgmt.md` — monorepo / secret / k8s adoption (316-commit repo)
 

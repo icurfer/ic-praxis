@@ -180,6 +180,37 @@ for m in ${DEPLOY_MANIFESTS[@]+"${DEPLOY_MANIFESTS[@]}"}; do
   fi
 done
 
+# ── Gate E: dual-agent constitution sync (CLAUDE.md ↔ AGENTS.md) ────────────
+# One rule set, two native entrypoints: Claude Code reads CLAUDE.md, Codex
+# reads AGENTS.md. Both carry a marker-delimited shared block that must stay
+# byte-identical — otherwise the two agents follow different rules and drift
+# silently. Judged on the staged blob, like every other gate.
+#   - both files carry the block          → blocks must match
+#   - one carries it, the other file exists WITHOUT it → that agent can't see
+#     the shared rules → block (finish the merge, or delete the odd file out)
+#   - only one entrypoint exists at all   → single-agent setup, nothing to judge
+SHARED_BEGIN='<!-- praxis:shared:begin -->'
+SHARED_END='<!-- praxis:shared:end -->'
+shared_block() {  # prints the block body; empty if the file or markers are absent
+  content "$1" | awk -v b="$SHARED_BEGIN" -v e="$SHARED_END" \
+    '$0==b{on=1;next} $0==e{on=0} on{print}'
+}
+if content CLAUDE.md >/dev/null 2>&1 && content AGENTS.md >/dev/null 2>&1; then
+  c_block="$(shared_block CLAUDE.md)"
+  a_block="$(shared_block AGENTS.md)"
+  if [ -z "$c_block" ] && [ -z "$a_block" ]; then
+    :  # neither carries the praxis block — the sync mechanism isn't in use here
+  elif [ "$c_block" = "$a_block" ]; then
+    ok "constitution in sync (CLAUDE.md ↔ AGENTS.md shared block)"
+  elif [ -z "$c_block" ] || [ -z "$a_block" ]; then
+    err "one constitution entrypoint has no praxis:shared block — that agent can't see the shared rules."
+    printf '%s    → copy the <!-- praxis:shared:begin/end --> block into the file that lacks it, or delete that file if unused.%s\n' "$DIM" "$RST" >&2
+  else
+    err "CLAUDE.md and AGENTS.md shared blocks have DRIFTED — the two agents would follow different rules."
+    printf '%s    → edit one, copy the marker block VERBATIM into the other, then stage both.%s\n' "$DIM" "$RST" >&2
+  fi
+fi
+
 # ── Result ──────────────────────────────────────────────────────────────────
 if [ "$fail" -ne 0 ]; then
   printf '\n%sCommit blocked.%s Fix the above, or bypass intentionally with %sgit commit --no-verify%s\n' \

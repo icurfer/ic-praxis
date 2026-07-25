@@ -2,8 +2,14 @@
   CLAUDE.md — the project constitution. The coding agent reads this every session.
   Replace every {{...}} placeholder. Delete guidance comments once filled.
   Keep it short and enforceable: rules the agent must FOLLOW, not prose.
+
+  DUAL-AGENT: the block between the praxis:shared markers is mirrored VERBATIM
+  in AGENTS.md (the same constitution for AGENTS.md-reading agents, e.g. Codex).
+  Edit the shared rules in either file, copy the block into the other, stage
+  both — the pre-commit gate (Gate E) blocks the commit if they drift.
 -->
 
+<!-- praxis:shared:begin -->
 # {{PROJECT_NAME}}
 
 ## System map
@@ -51,6 +57,7 @@ The mechanically-checkable rules above are enforced at commit time by
 `.githooks/pre-commit` → `scripts/check-conventions.sh`. Enable once per clone:
 `bash scripts/install-hooks.sh`. Bypass (emergency): `git commit --no-verify`.
 When a retro produces a new checkable rule, add a gate to that script.
+<!-- praxis:shared:end -->
 
 ## Routing a new rule (which layer?)
 When a retro yields a new convention, place it in the RIGHT layer — the more

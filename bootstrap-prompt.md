@@ -10,13 +10,17 @@ retrospectives become machine-enforced pre-commit gates so mistakes can't ship
 twice. Create these five axes, adapting each to THIS repo (inspect the stack,
 build, and CI first):
 
-1. **`CLAUDE.md`** — the agent's constitution: a system map, a numbered work
-   order, delegated responsibilities (steps the agent owns unprompted, e.g.
-   bumping the deploy-trigger file), and hard "Do NOT" rules — each with the
-   incident-style reason it exists. Include a **change-size rule**: big changes
-   (new source file, ≥100 lines, new API/dep/infra, rule change) take the full
-   doc flow; small changes skip spec/scope/deferred and just log one CHANGELOG
-   line — otherwise the doc system gets bypassed and dies.
+1. **`CLAUDE.md` + `AGENTS.md`** — the agent's constitution: a system map, a
+   numbered work order, delegated responsibilities (steps the agent owns
+   unprompted, e.g. bumping the deploy-trigger file), and hard "Do NOT" rules —
+   each with the incident-style reason it exists. Include a **change-size rule**:
+   big changes (new source file, ≥100 lines, new API/dep/infra, rule change)
+   take the full doc flow; small changes skip spec/scope/deferred and just log
+   one CHANGELOG line — otherwise the doc system gets bypassed and dies.
+   Ship the shared rules as a `<!-- praxis:shared:begin/end -->` marker block
+   mirrored VERBATIM in both files, so Claude Code (reads `CLAUDE.md`) and
+   Codex (reads `AGENTS.md`) follow the same law; agent-native notes (memory
+   routing, what auto-loads) go outside the block.
 
 2. **`docs/`** — a four-stage flow: requirements backlog → spec → scope →
    deferred backlog → done report, plus a one-line `CHANGELOG.md`. Change is
@@ -27,7 +31,10 @@ build, and CI first):
    version bump (CI won't fire — **deletions count**: removing deploy code is a
    deploy too, and deleting the version file itself is never a "bump"), malformed
    version file (exactly one non-empty line, no blank second line), secret/taboo
-   patterns. EVERY gate judges the **staged blob** (`git show ":$f"`), never the
+   patterns, and constitution drift (when both `CLAUDE.md` and `AGENTS.md`
+   exist, their `praxis:shared` blocks must match byte-for-byte — one entrypoint
+   silently missing rules the other has is how dual-agent repos split).
+   EVERY gate judges the **staged blob** (`git show ":$f"`), never the
    working tree, runs from the repo root, and disables `core.quotepath` so
    non-ASCII filenames aren't silently skipped. Match secrets in quoted form
    (`key = "..."`, YAML `key: "..."`, unterminated `key: "...`) in all files, AND

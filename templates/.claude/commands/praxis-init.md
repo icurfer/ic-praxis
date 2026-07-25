@@ -44,10 +44,16 @@ Do this:
      - **No** → DELETE the "Multi-session rule" section from `CLAUDE.md` (it ships
        wrapped in a "keep only if…" comment). Don't tax single-session projects.
 
-3. **`CLAUDE.md`** — replace every `{{...}}`: project name, system map table, the
-   real deploy-trigger file name(s), and 2-3 genuine "Do NOT" rules inferred from
-   the stack (each with a plausible "why"). Keep the **change-size** block (big vs
-   small change) — it's what keeps the doc flow from being bypassed.
+3. **`CLAUDE.md` + `AGENTS.md`** — replace every `{{...}}`: project name, system
+   map table, the real deploy-trigger file name(s), and 2-3 genuine "Do NOT"
+   rules inferred from the stack (each with a plausible "why"). Keep the
+   **change-size** block (big vs small change) — it's what keeps the doc flow
+   from being bypassed. The two files share a `<!-- praxis:shared:begin/end -->`
+   block that must stay byte-identical (Gate E blocks drift): edit it once in
+   CLAUDE.md, then copy it VERBATIM into AGENTS.md. If the repo already had its
+   OWN `CLAUDE.md` or `AGENTS.md` (the installer never overwrites), merge the
+   shared block into that file instead — or, if the user only uses one agent,
+   they may delete the unused entrypoint.
 
 4. **`scripts/check-conventions.sh`** — set `AREA_CODE_RE`/`AREA_VFILE`,
    `FORBIDDEN_PATTERNS`, and (if enabled) `DEPLOY_MANIFESTS` to this project's real
@@ -64,7 +70,9 @@ Do this:
 
 7. **Enable and PROVE the gate**: run `bash scripts/install-hooks.sh`, then make
    a deliberately-violating staged change (deploy code without a version bump)
-   and show the commit is BLOCKED. Then revert the dummy change.
+   and show the commit is BLOCKED. Then revert the dummy change. If both
+   constitution files are in use, also prove Gate E once: edit the shared block
+   in one file only, show the block, then re-sync.
 
 8. **Persist memory**: run `bash scripts/setup-claude-memory.sh` so the memory is
    git-versioned and loaded each session.
