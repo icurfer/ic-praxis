@@ -8,6 +8,12 @@ incident became a written record, which became an enforced change.
 Don't delete these — the *why* behind a rule is worth more than the rule. If you
 reopen or revise one, note it here rather than editing the source retro.
 
+## Design proposals — not yet implemented
+
+| Document | Status | Direction |
+|---|---|---|
+| [`dual-agent-claude-codex.md`](dual-agent-claude-codex.md) | Proposed, 2026-07-25 | Extract an agent-neutral `.praxis/` core and generate thin Claude Code / Codex adapters without splitting the rules |
+
 ## `from-aipf-mgmt.md` — monorepo / secret / k8s adoption (316-commit repo)
 
 | # | Gap | Resolution in v0.2.0 |
