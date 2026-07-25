@@ -71,6 +71,14 @@ More mechanical / more frequent ⇒ harder layer:
 Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
 <!-- praxis:shared:end -->
 
+## Commit attribution
+AI-agent commits must be identifiable as such on GitHub. End every commit
+message with this trailer (Claude Code adds its own equivalent automatically):
+
+```
+Co-Authored-By: Codex <noreply@openai.com>
+```
+
 ## Codex-native project assets
 
 The shipped Codex adapters live under `templates/.agents/skills/`. When their
