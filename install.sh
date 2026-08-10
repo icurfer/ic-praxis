@@ -142,7 +142,7 @@ if [ "$NO_VERSION" -eq 1 ]; then
 elif compgen -G "$TARGET/*/version" >/dev/null 2>&1; then
   echo "  skip: per-area */version detected → not seeding a root version file."
 elif [ ! -e "$TARGET/version" ]; then
-  printf '%s' "0.1.0" > "$TARGET/version"; echo "  add: version (0.1.0)"
+  printf '%s' "0.0.0" > "$TARGET/version"; echo "  add: version (0.0.0)"
 fi
 
 # chmod +x only the files WE copied — never touch a pre-existing script we skipped. (P8)

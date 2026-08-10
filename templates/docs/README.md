@@ -20,7 +20,8 @@ change-size rule in `CLAUDE.md`. (A change is "big" if it adds a source file,
 changes ≥100 lines, adds an API/dependency/infra, or changes a rule.)
 
 ## Version policy
-`vX.Y.Z` on the spec is the master. `0.1.0` to start, **`1.0.0` = release**.
+`vX.Y.Z` on the spec is the master. `0.0.0` to start (the scaffold seeds it; the
+first real change bumps it), **`1.0.0` = release**.
 Each source repo carries its own one-line deploy-trigger file, patch-bumped only
 when that repo's code changed.
 
