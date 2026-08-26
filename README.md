@@ -285,6 +285,29 @@ session + sub-agents that each own one sub-unit and hand a summary back — so t
 main session stays the single writer of shared state. Single-session projects
 should leave it off; it only taxes them.
 
+## Running alongside another ruleset
+
+ic-praxis governs the **process** — what a change must carry before it can commit.
+Plenty of popular rulesets govern the **code** (minimalism ladders, style guides,
+review heuristics). The two are orthogonal and compose well; the only real
+collision is over the constitution files. Three ways to keep them apart, best first:
+
+1. **Install it as a plugin.** Most rulesets ship a plugin for Claude Code / Codex.
+   A plugin lives in the agent's own layer and never touches your repo, so there is
+   nothing to collide with. File-copy instructions are usually just the fallback for
+   agents that have no plugin system — don't reach for them first.
+2. **Put it in the global constitution.** Agents that read `AGENTS.md` also read a
+   global one (`~/.codex/AGENTS.md` for Codex). A code-level ruleset you want in
+   *every* project belongs there anyway, and your project's `AGENTS.md` stays yours.
+3. **Append it below the marker.** If it must live in this repo, add it as its own
+   section **after `<!-- praxis:shared:end -->`**. That area is free — the shipped
+   `AGENTS.md` already uses it for its own sections. Append, never overwrite.
+
+**What you must not do is replace `CLAUDE.md` or `AGENTS.md` wholesale** with
+another project's file — that silently deletes your constitution. Gate E catches
+it: if one entrypoint carries the `praxis:shared` block and the other doesn't, or
+the two blocks drift, the commit is blocked with the reason printed.
+
 ## What the gate does *not* do
 
 The gate stops **discipline lapses** (a forgotten version bump, a pasted secret, a
