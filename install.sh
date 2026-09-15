@@ -5,7 +5,9 @@
 # It only copies the template files (CLAUDE.md, AGENTS.md, docs/, scripts/,
 # .claude/, .agents/, ...)
 # into the target repo. It never leaves ic-praxis' own repo, .git, or
-# templates/ folder behind — so your project is not polluted.
+# templates/ folder behind — so your project is not polluted. It also never
+# touches anything OUTSIDE the target repo: your personal ~/.claude/ is yours.
+# Removing it again: docs/uninstall.md in the ic-praxis repo.
 #
 #   # recommended — run at your project root, nothing left behind:
 #   curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh | bash
@@ -135,6 +137,35 @@ if [ -f "$GA" ] && [ -f "$SRC/.gitattributes" ]; then
   done < "$SRC/.gitattributes"
 fi
 
+# Same additive merge for .gitignore. These patterns keep PERSONAL agent files
+# (`settings.local.json`, `user-*.md`, `*.local.md`) out of a SHARED repo; a
+# project almost always has a .gitignore already, so a copy-loop skip would mean
+# the guard never arrives. (vulcan-charts P1)
+GI="$TARGET/.gitignore"
+if [ -f "$GI" ] && [ -f "$SRC/.gitignore" ]; then
+  while IFS= read -r ign; do
+    case "$ign" in ''|'#'*) continue ;; esac
+    if ! grep -qxF -e "$ign" "$GI"; then
+      [ -n "$(tail -c1 "$GI")" ] && printf '\n' >> "$GI"
+      printf '%s\n' "$ign" >> "$GI"
+      echo "  merge: .gitignore += $ign"
+    fi
+  done < "$SRC/.gitignore"
+fi
+
+# ic-praxis <= v0.5.3 shipped scripts/setup-claude-memory.sh, which symlinked the
+# user's PERSONAL memory directory into the repo. v0.6.0 dropped it: on a shared
+# repo it leaks personal notes into the team tree, and the encoded path depends on
+# where the session was opened. We never delete a file in the target repo — say
+# what to do instead. (vulcan-charts P0)
+if [ -f "$TARGET/scripts/setup-claude-memory.sh" ]; then
+  echo ""
+  echo "  ! scripts/setup-claude-memory.sh is left over from ic-praxis <= v0.5.3."
+  echo "    It symlinks your personal ~/.claude memory dir into this repo — dropped in v0.6.0."
+  echo "    Undo the link and restore your backup:  bash scripts/unlink-claude-memory.sh"
+  echo "    Then delete the old script:             git rm scripts/setup-claude-memory.sh"
+fi
+
 # Seed a one-line root 'version' file — unless disabled, already present, or the
 # repo already uses per-area 'foo/version' files (monorepo). (P4)
 if [ "$NO_VERSION" -eq 1 ]; then
@@ -158,9 +189,10 @@ echo ""
 echo "✓ scaffolded ($copied new, $skipped kept)."
 echo "Next (from the project root):"
 echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
-echo "  2) git-version the memory:         bash scripts/setup-claude-memory.sh"
-echo "  3) in Claude Code, customize:      /praxis-init <one line about your project>"
+echo "  2) in Claude Code, customize:     /praxis-init <one line about your project>"
 echo "     (recommended — inspects the repo, tunes the gate & modules, proves it blocks a bad commit)"
-echo "     in Codex, customize:             \$praxis-init <one line about your project>"
+echo "     in Codex, customize:            \$praxis-init <one line about your project>"
 echo "  AGENTS.md carries the same rules; Gate E keeps its praxis:shared block"
 echo "  in sync with CLAUDE.md's."
+echo "  .claude/ is TEAM material and reaches every teammate who clones this repo;"
+echo "  personal notes go in .claude/memory/user-*.md or *.local.md (git-ignored)."

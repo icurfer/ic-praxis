@@ -67,7 +67,8 @@ mechanical and the more often it must fire, the harder the layer:
   hook in `.claude/settings.json` (PreToolUse/PostToolUse)
 - **a bounded sub-task another agent should own in isolation** → a sub-agent in
   `.claude/agents/` (multi-session module — see below)
-- **repeatable multi-step procedure** → a skill in `.claude/skills/`
+- **repeatable multi-step procedure** → a skill in `.claude/skills/` (the
+  `SKILL.md` documents it; any runnable helper it calls lives in `scripts/`)
 - **durable fact to recall when relevant** → `.claude/memory/`
 - **always-on judgment rule** → a "Do NOT"/work-order line in this file
 Don't put a narrow rule in an always-loaded layer — it taxes every unrelated session.
@@ -91,11 +92,22 @@ overwrite — git never sees a conflict. Therefore:
 <!-- /multi-session module -->
 
 
-## Memory
-`.claude/memory/` is shared, cross-session memory (one fact per file, indexed in
-`MEMORY.md`). Save durable facts there, not incidental conversation detail. Run
-`bash scripts/setup-claude-memory.sh` once per clone to git-version it and load it
-each session. Starter rules are marked `(STARTER RULE …)` — keep or prune them.
+## Memory (team knowledge, read on demand)
+`.claude/memory/` is the team's shared, git-versioned knowledge — one fact per
+file, indexed in `.claude/memory/MEMORY.md`. It is **not** auto-loaded: when a
+task touches a topic, read the index and open the matching files. Save new
+durable facts there (and index them) instead of re-learning them each session;
+save durable facts, not incidental conversation detail. Starter rules are marked
+`(STARTER RULE …)` — keep or prune them.
+
+**Team vs personal.** Everything in `.claude/memory/` is committed and reviewed
+like code. Your own notes belong in a personal file — `user-*.md` or
+`*.local.md`, both git-ignored — or in your own `~/.claude/` memory, which this
+repo never touches. Do not link, move, or replace anything under `~/.claude/`
+on account of this repo. (why: ic-praxis ≤ v0.5.3 symlinked a personal memory
+directory into the repo; on a shared repo that leaked personal notes into the
+team's working tree. Undo it with `bash scripts/unlink-claude-memory.sh`.)
+
 This system is meant to grow, but growth must stay signal: periodically run
 `/praxis-review` (or `bash scripts/praxis-review.sh`) to prune stale rules
 and dead gates.

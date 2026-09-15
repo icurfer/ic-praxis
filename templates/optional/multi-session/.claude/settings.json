@@ -1,5 +1,5 @@
 {
-  "//": "ic-praxis multi-session module — a NON-BLOCKING pre-push reminder. It always exits 0 (a starter hook never blocks; exit 2 would). Delete this file if you don't run this repo with multiple parallel sessions. When a retro yields a rule that SHOULD fire mid-tool-use, add a real PreToolUse/PostToolUse hook here per the routing tree in CLAUDE.md.",
+  "//": "ic-praxis multi-session module — a NON-BLOCKING pre-push reminder. It always exits 0 (a starter hook never blocks; exit 2 would). Delete this file if you don't run this repo with multiple parallel sessions. SHARED REPO WARNING: a committed .claude/settings.json applies to EVERY teammate who clones this repo — its keys take precedence over their personal ~/.claude/settings.json, and hooks declared here fire in their sessions too (in addition to their own). Committing it is a change to everyone's environment: decide it as a team, or keep it local in .claude/settings.local.json (git-ignored). When a retro yields a rule that SHOULD fire mid-tool-use, add a real PreToolUse/PostToolUse hook here per the routing tree in CLAUDE.md.",
   "hooks": {
     "PreToolUse": [
       {

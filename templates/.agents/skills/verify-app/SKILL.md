@@ -6,5 +6,6 @@ description: Run the repository's reusable end-to-end application verification w
 # verify-app
 
 Read `../../../.claude/skills/verify-app/SKILL.md` completely and follow it as
-the canonical verification procedure. Resolve its `helpers/` and `scenarios/`
-paths relative to `.claude/skills/verify-app/`.
+the canonical verification procedure. Its `scenarios/` paths resolve relative to
+`.claude/skills/verify-app/`; the runnable helpers it names live under
+`scripts/` at the repo root.

@@ -1,3 +1,10 @@
 .DS_Store
 *.log
 node_modules/
+
+# personal agent files — this repo's own .claude/ is team material (dogfooding
+# the boundary the scaffold ships; see templates/.gitignore)
+.claude/settings.local.json
+.claude/memory/user-*.md
+.claude/memory/*.local.md
+memory.bak.*

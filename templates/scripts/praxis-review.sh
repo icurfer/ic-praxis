@@ -9,6 +9,14 @@
 #     procedure under .claude/ was deleted — the adapter routes to nothing)
 #   - growth stats + the list of active gates
 #
+# SCOPE: this script inspects the `.claude/` + `.agents/` layout. If this repo
+# keeps its rules elsewhere (constitution + docs/ only, no `.claude/`), the
+# script has nothing to check — delete it rather than leaving a dead entrypoint.
+#
+# Personal memory files (`user-*.md`, `*.local.md` — git-ignored by convention)
+# are skipped everywhere below: they are not team assets, so they are neither
+# orphans nor index candidates.
+#
 # Read-only. It reports and proposes; it never deletes. Run:
 #   bash scripts/praxis-review.sh
 set -euo pipefail
@@ -23,15 +31,22 @@ ADAPTERS=".agents/skills"   # Codex-native thin adapters (route to .claude/ cano
 CYA=$'\033[36m'; YEL=$'\033[33m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
 hdr() { printf '\n%s== %s ==%s\n' "$CYA" "$1" "$RST"; }
 
-[ -d "$MEM" ] || { echo "no $MEM/ here — run from a scaffolded project root." >&2; exit 1; }
+if [ ! -d "$MEM" ]; then
+  echo "no $MEM/ here — run from a scaffolded project root." >&2
+  echo "(If this repo deliberately keeps no .claude/, this script doesn't apply — delete it.)" >&2
+  exit 1
+fi
 
-# all memory files except the index (no mapfile — bash 3.2/macOS compatible)
+# all TEAM memory files: everything but the index and personal notes
+# (no mapfile — bash 3.2/macOS compatible)
 FILES=()
 while IFS= read -r _f; do FILES+=("$_f"); done \
-  < <(find "$MEM" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' | sort)
+  < <(find "$MEM" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' ! -name 'user-*.md' ! -name '*.local.md' | sort)
 
 hdr "Growth"
-printf '  memory files: %s\n' "${#FILES[@]}"
+printf '  team memory files: %s\n' "${#FILES[@]}"
+personal="$(find "$MEM" -maxdepth 1 \( -name 'user-*.md' -o -name '*.local.md' \) 2>/dev/null | wc -l | tr -d ' ')"
+[ "${personal:-0}" -gt 0 ] && printf '  personal (ignored, not team assets): %s\n' "$personal"
 if [ -f "$GATE" ]; then
   # Count gate section headers, locale-robust: an `# ── ` banner mentioning a
   # gate/rule in any language ("Gate", "규칙", "règle", …). Falls back to any

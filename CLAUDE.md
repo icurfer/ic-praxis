@@ -15,6 +15,7 @@ to **this repo itself** (dogfooding). The scaffold that ships lives in
 | `scripts/`, `.githooks/` | This repo's OWN praxis gate (self-applied). |
 | `README.md` / `README.ko.md` | Landing docs — English is canonical, Korean is a translation. |
 | `docs/improvements/` | Resolved adoption-retro history (why rules exist). |
+| `docs/uninstall.md` | How to remove the scaffold again — including the one step that reaches outside the repo. |
 | `version` | ic-praxis' scaffold release version (one line, no trailing newline). |
 
 ## Work order
@@ -39,6 +40,11 @@ one `templates/CLAUDE.md` prescribes for products.
 ## Do NOT
 - **Do not put a real secret in a `templates/` example** — it ships to every user;
   a shipped example secret becomes everyone's leak. Use `CHANGE_ME`/`{{...}}`.
+- **Do not make a shipped script write outside the target repo** — no touching
+  `~/.claude/` or any per-person path. (why: v0.5.3's `setup-claude-memory.sh`
+  moved a teammate's personal memory dir aside and symlinked the repo in its
+  place; on a shared repo that leaked personal notes into the team tree. If a
+  feature seems to need it, it needs an opt-in and a documented undo instead.)
 - **Do not let `README.ko.md` silently drift** from `README.md` — English is
   canonical, but material changes must be translated. (why: bilingual drift misleads users.)
 - **Do not change the gate engine in `templates/scripts/` without re-verifying in a

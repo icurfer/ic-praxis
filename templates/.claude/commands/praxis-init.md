@@ -46,7 +46,10 @@ Do this:
 
    - **multi-session?** Ask the user: *"Will this repo be run with several
      parallel Claude sessions (a hub coordinating multiple sub-units)?"* This
-     can't be auto-detected.
+     can't be auto-detected. If the repo is **shared with a team**, say so in the
+     question: the module commits `.claude/settings.json`, which applies to every
+     teammate's sessions (its keys outrank their personal `~/.claude/settings.json`
+     and its hooks fire for them too). That is a team decision, not a convenience.
      - **Yes** → keep the "Multi-session rule" section in `CLAUDE.md`, and create
        `.claude/agents/worker.md` (a sub-agent that edits only ONE sub-unit, never
        the hub, and returns a handoff summary) + a non-blocking `.claude/settings.json`
@@ -76,7 +79,10 @@ Do this:
 
 6. **`.claude/memory/`** — the `feedback_*` files are universal STARTER rules.
    Keep the ones that fit this project, delete the rest, and update `MEMORY.md`
-   to match. Do not invent project-specific facts.
+   to match. Do not invent project-specific facts. This directory is **team
+   knowledge read on demand** (via the `MEMORY.md` index) — never link, move or
+   replace anything under the user's personal `~/.claude/`, and tell them
+   personal notes go in `user-*.md` / `*.local.md` (git-ignored).
 
 7. **Enable and PROVE the gate**: run `bash scripts/install-hooks.sh`, then make
    a deliberately-violating staged change (deploy code without a version bump)
@@ -84,15 +90,20 @@ Do this:
    constitution files are in use, also prove Gate E once: edit the shared block
    in one file only, show the block, then re-sync.
 
-8. **Persist memory**: run `bash scripts/setup-claude-memory.sh` so the memory is
-   git-versioned and loaded each session.
+8. **Check the shared/personal boundary**: confirm the shipped `.gitignore` has
+   the personal patterns (`.claude/settings.local.json`, `.claude/memory/user-*.md`,
+   `.claude/memory/*.local.md`) — if the repo already had a `.gitignore`, the
+   installer appends them, so verify they landed. If the user previously ran the
+   old `scripts/setup-claude-memory.sh` (ic-praxis ≤ v0.5.3), have them undo it:
+   `bash scripts/unlink-claude-memory.sh`.
 
 9. **Route the project's existing conventions** into the right layer as you fill
    CLAUDE.md (harder layer for more mechanical / more frequent rules):
    - checkable at commit → gate in `check-conventions.sh`
    - fire during tool use (block/modify/react) → `.claude/settings.json` hook
    - bounded sub-task owned in isolation → `.claude/agents/` (multi-session only)
-   - repeatable procedure → `.claude/skills/`
+   - repeatable procedure → `.claude/skills/` (the SKILL.md documents it; any
+     runnable helper it calls goes in `scripts/`)
    - durable fact → `.claude/memory/`
    - always-on judgment → a CLAUDE.md line
    Don't pile everything into CLAUDE.md — a narrow rule there taxes every session.

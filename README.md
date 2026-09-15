@@ -32,8 +32,8 @@ A five-axis scaffold, dropped into any repo:
 | **1. Constitution** | `CLAUDE.md` + `AGENTS.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). One shared rule block, mirrored in both files and **drift-gated** — Claude Code and Codex read the same law. |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
 | **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
-| **4. Shared memory** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | Cross-session facts, one per file, indexed — **git-versioned** so lessons survive resets and are shared with the team. Ships a few universal starter rules. |
-| **5. Verify skill** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts; Claude Code and Codex each get a native entrypoint to one canonical procedure. |
+| **4. Shared memory** | `.claude/memory/` | Team knowledge, one fact per file, indexed in `MEMORY.md` and **read on demand** — git-versioned, so lessons survive context resets and travel by PR. Personal notes stay out (`user-*.md` / `*.local.md` are git-ignored). Ships a few universal starter rules. |
+| **5. Verify skill** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts (the procedure is the skill; the runnable helpers live in `scripts/`). Claude Code and Codex each get a native entrypoint to one canonical procedure. |
 
 The heart is axis 3 feeding axis 1: **a retro that produces a checkable rule becomes a gate that can't be forgotten.**
 
@@ -177,20 +177,25 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 ```
 
 **Works on Linux, macOS, and Windows (Git Bash).** The scripts run on stock
-macOS bash 3.2 (no `declare -A`/`mapfile`), a shipped `.gitattributes` pins
-`*.sh`/hooks/`version` to LF so a CRLF checkout can't break the gate, and
-`setup-claude-memory.sh` falls back to an NTFS junction on Windows where
-symlinks need Developer Mode. On Windows, run everything from **Git Bash**.
+macOS bash 3.2 (no `declare -A`/`mapfile`) and a shipped `.gitattributes` pins
+`*.sh`/hooks/`version` to LF so a CRLF checkout can't break the gate. On
+Windows, run everything from **Git Bash**.
 
-Then activate the gate and git-version the memory:
+The installer writes **only inside the target repo** — never into your personal
+`~/.claude/`. If the repo already has a `.gitignore` or `.gitattributes`, it
+appends the missing lines instead of skipping the file, so the personal-file
+guards (`settings.local.json`, `user-*.md`, `*.local.md`) always land.
+
+Then activate the gate:
 
 ```bash
 bash scripts/install-hooks.sh        # activate the commit gate
-bash scripts/setup-claude-memory.sh  # git-version memory + load it each session
 ```
 
 Even after the raw installer, still run `/praxis-init` — the scaffold stays
 generic until an agent tunes it to this project.
+
+Removing it again: [`docs/uninstall.md`](docs/uninstall.md).
 
 ---
 
@@ -259,7 +264,15 @@ Open `scripts/check-conventions.sh` — the config block at the top:
   config-style files (`.env`/`.yaml`/`.ini`/… — widen `BARE_VALUE_FILES_RE` if
   needed). The placeholder allowlist (`CHANGE_ME`, `{{...}}`, …) is applied to the
   **extracted value only**, so a comment elsewhere on the line can't exempt a real
-  secret.
+  secret. The key list covers `password`/`token`/`api_key`/`secretKey` **and**
+  `jwtSecret` / `clientSecret` — add your own key names here when a project keeps
+  them under a different word.
+- `SECRET_ALLOWLIST` *(optional)* — for a value that is plaintext **by policy**
+  (a demo admin password, a fixture token), one narrow exception per entry:
+  `'FILE_PATH_RE|LINE_RE'`. Write the real value into the line regex, so rotating
+  or changing it makes the gate fire again until someone re-approves. This is the
+  alternative to `--no-verify` or switching the gate off; literal AWS keys and
+  private keys (`FORBIDDEN_PATTERNS`) can never be allowlisted.
 - `DEPLOY_MANIFESTS` *(optional)* — keep a version bump in sync with the image tag
   in a Helm/k8s/compose manifest, so you can't ship a bump that deploys the old image.
 
@@ -275,7 +288,7 @@ confirms each with you, or set it explicitly with an installer flag:
 | Module | Turn on when | What it adds | Enable |
 |---|---|---|---|
 | **monorepo** | >1 deployable unit | per-area `AREA_CODE_RE`/`AREA_VFILE`, no root `version` | `/praxis-init` detects · `--no-version` |
-| **multi-session** | a hub run with several parallel sessions | `.claude/agents/worker.md` (sub-unit-only worker) + `.claude/settings.json` pre-push reminder + a CLAUDE.md multi-session rule | `install.sh --multi-session` · `/praxis-init` asks |
+| **multi-session** | a hub run with several parallel sessions | `.claude/agents/worker.md` (sub-unit-only worker) + `.claude/settings.json` pre-push reminder + a CLAUDE.md multi-session rule. ⚠️ On a shared repo that committed `settings.json` applies to every teammate's sessions — a team decision | `install.sh --multi-session` · `/praxis-init` asks |
 | **deploy-manifest** | k8s / Helm / compose | `DEPLOY_MANIFESTS` sync gate (version ↔ image tag) | `/praxis-init` detects |
 
 The **multi-session** module exists because the five axes discipline a *single*
@@ -284,6 +297,30 @@ other's hub edits silently (git sees no conflict). The module's answer: one main
 session + sub-agents that each own one sub-unit and hand a summary back — so the
 main session stays the single writer of shared state. Single-session projects
 should leave it off; it only taxes them.
+
+## Shared repo? Two things to decide
+
+A solo repo and a team repo want different defaults here. ic-praxis assumes the
+**shared** case: everything it installs lives inside the repo, and your personal
+`~/.claude/` is never touched. Two boundaries are worth deciding out loud.
+
+**1. `.claude/memory/` is team knowledge, not your notebook.** It is committed and
+reviewed like code, and it is read **on demand** — the constitution tells the
+agent to open `MEMORY.md` when a task touches a topic. Personal notes go in
+`.claude/memory/user-*.md` or `*.local.md`, both git-ignored by the shipped
+`.gitignore`. (Up to v0.5.3 a `setup-claude-memory.sh` script symlinked the repo
+into your personal memory path to get auto-loading; on a shared repo that leaked
+personal notes into the team's working tree, and the encoded path depended on
+which directory you opened the session in. It was removed in v0.6.0 —
+`scripts/unlink-claude-memory.sh` undoes it and restores your backup.)
+
+**2. A committed `.claude/` reaches every teammate.** A repo-level `.claude/`
+outranks each person's `~/.claude/`: `settings.json` keys committed here win over
+their personal ones, hooks declared here fire in their sessions too, and a
+command or skill with the same name shadows theirs. That is fine for rules the
+team agreed on — but it means committing `.claude/settings.json` (which the
+**multi-session** module does) changes everyone's environment. Decide it as a
+team; `/praxis-init` asks before enabling that module.
 
 ## Running alongside another ruleset
 

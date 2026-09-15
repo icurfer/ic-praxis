@@ -36,6 +36,21 @@ the "don't edit the source retro" rule):
   existing one) is preserved, not replaced. Separating "praxis installed" from
   "agent file exists" via a managed marker stays deferred (increment 2).
 
+## [`applied/from-vulcan-charts.md`](applied/from-vulcan-charts.md) — shared repo vs personal space (v0.6.0)
+
+| # | Gap | Resolution in v0.6.0 |
+|---|---|---|
+| P0 | `setup-claude-memory.sh` (install step 2) moved a teammate's personal memory dir aside and symlinked the repo in | Script **removed**; memory is read-on-demand team knowledge. `unlink-claude-memory.sh` undoes an existing link + restores the backup; installer detects the leftover |
+| P1 | No `templates/.gitignore`, so no personal/team boundary shipped | Ships one; `install.sh` **merges** it into a pre-existing `.gitignore`; `praxis-review.sh` stops counting personal files |
+| P2 | No warning that a committed `.claude/` reaches every teammate (multi-session installs `settings.json`) | Stated in `.claude/README.md`, the module comment, both READMEs, and the `/praxis-init` question |
+| P3 | Executables lived in `.claude/skills/*/helpers/` | `helpers/` no longer ships — procedure in `SKILL.md`, executables in `scripts/` |
+| P4 | No removal path, including the symlink outside the repo | `docs/uninstall.md` (outside-the-repo step first); `praxis-review.sh` states its `.claude/` scope |
+| side | `SECRET_KEY_RE` missed `jwtSecret`/`clientSecret`; no exception short of disabling the gate | Both keys added; `SECRET_ALLOWLIST` (`FILE_RE|LINE_RE`, value written in) — never applies to `FORBIDDEN_PATTERNS` |
+
+Root cause behind all five: the scaffold's default shape assumed a **solo
+developer's own repo**. v0.6.0 makes "shared repo" the first-class case, and adds
+the rule that a shipped script never writes outside the target repo.
+
 ## [`applied/from-aipf-mgmt.md`](applied/from-aipf-mgmt.md) — monorepo / secret / k8s adoption (316-commit repo)
 
 | # | Gap | Resolution in v0.2.0 |

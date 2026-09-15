@@ -44,8 +44,12 @@ build, and CI first):
    bare form (`key: value`, `KEY=value`) in config-style files (.env/.yaml/.ini/…;
    in code a bare RHS is a variable reference). The placeholder allowlist is
    checked per assignment against each **extracted value** — a line is exempt
-   only if ALL its values are placeholders. For a monorepo, key each deploy area
-   to its own version file. Add `scripts/install-hooks.sh` to set
+   only if ALL its values are placeholders. Cover `jwtSecret`/`clientSecret`
+   style keys too, not just `secretKey`. For a value that is plaintext by
+   policy, add a narrow `SECRET_ALLOWLIST` entry (`FILE_RE|LINE_RE`, with the
+   actual value in the line regex so a change re-triggers the gate) instead of
+   disabling the gate; literal AWS keys / private keys are never allowlistable.
+   For a monorepo, key each deploy area to its own version file. Add `scripts/install-hooks.sh` to set
    `core.hooksPath`. Portability: keep the scripts bash-3.2/Git-Bash compatible
    (no `declare -A`, no `mapfile`; guard empty-array expansions) and add a
    `.gitattributes` pinning `*.sh`, `.githooks/*`, and `version` to `eol=lf` so
@@ -54,11 +58,24 @@ build, and CI first):
 
 4. **`.claude/memory/`** — one fact per file with a `type:` (feedback / project
    / reference / user), indexed in `MEMORY.md`; feedback/project facts include
-   *why* and *how to apply*.
+   *why* and *how to apply*. Treat it as **team knowledge read on demand**: the
+   constitution tells the agent to open `MEMORY.md` when a task touches a topic.
+   Never link, move or replace anything under the user's personal agent
+   directory (`~/.claude/`) to get auto-loading — on a shared repo that hijacks
+   a per-person location and turns every saved memory into a repo file. Draw the
+   team/personal line by filename and enforce it in `.gitignore`:
+   `.claude/settings.local.json`, `.claude/memory/user-*.md`,
+   `.claude/memory/*.local.md` are personal and ignored; everything else is
+   committed. Note in the docs that a committed `.claude/` reaches every
+   teammate — `settings.json` keys outrank their personal ones and its hooks
+   fire in their sessions too — so committing one is a team decision.
 
 5. **Verify skill + Codex adapters** — keep the canonical reusable end-to-end
-   verification procedure (helpers + per-feature scenarios) in
-   `.claude/skills/verify-app/`. Then add Codex-native thin adapters in
+   verification procedure (per-feature scenarios) in
+   `.claude/skills/verify-app/`, with the **runnable helpers it calls in
+   `scripts/`** — a skill is documentation packaging and gets renamed or
+   dropped; executables buried under `.claude/skills/<name>/helpers/` split the
+   repo's script conventions in two. Then add Codex-native thin adapters in
    `.agents/skills/` for `praxis-init`, `praxis-review`, and `verify-app`:
    each adapter only points to the existing canonical procedure
    (`.claude/commands/<name>.md` or `.claude/skills/<name>/SKILL.md`) instead

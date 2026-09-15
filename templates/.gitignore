@@ -1,0 +1,16 @@
+# ic-praxis: keep PERSONAL agent files out of a SHARED repo.
+#
+# `.claude/` is committed so the team shares rules, skills and commands — but a
+# few things under it are per-person, not team assets. Without these lines a
+# stray `git add -A` pushes someone's private notes into the team repo.
+#
+# Naming convention (see .claude/README.md): a personal memory file is
+# `user-*.md` or `*.local.md`; anything else under .claude/memory/ is team
+# knowledge and IS committed.
+.claude/settings.local.json
+.claude/memory/user-*.md
+.claude/memory/*.local.md
+
+# Backups left by ic-praxis <= v0.5.3's setup-claude-memory.sh (removed in
+# v0.6.0). Restore yours with: bash scripts/unlink-claude-memory.sh
+memory.bak.*

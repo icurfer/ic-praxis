@@ -40,12 +40,17 @@ FORBIDDEN_PATTERNS=(
   'AKIA[0-9A-Z]{16}'
   '-----BEGIN [A-Z ]*PRIVATE KEY-----'
 )
-SECRET_KEY_RE='(password|passwd|secret_?key|secretkey|token|api_?key)'
+SECRET_KEY_RE='(password|passwd|secret_?key|secretkey|jwt_?secret|client_?secret|token|api_?key)'
 BARE_VALUE_FILES_RE='(^|/)(\.env[^/]*|[^/]+\.(ya?ml|properties|ini|conf|cfg|toml|env))$|(^|/)dockerfile[^/]*$'
 # Placeholders — the scaffold intentionally ships CHANGE_ME / {{...}} examples.
 # Checked per assignment against the extracted VALUE; a line is exempt only if
 # ALL its values are placeholders. Wordy patterns are boundary-anchored.
 PLACEHOLDER_RE='(CHANGE_?ME|REDACTED|xxxx+|\$\{|\{\{|<[^>]*>|(^|[^[:alnum:]])(example|placeholder|dummy|change[-_]?me)([^[:alnum:]]|$))'
+# SECRET_ALLOWLIST — narrow, reviewed exceptions to the key/value gate:
+# 'FILE_PATH_RE|LINE_RE' (both extended regexes; put the ACTUAL value in LINE_RE
+# so changing the value re-triggers the gate). Never applies to
+# FORBIDDEN_PATTERNS — a literal AWS key or private key is never allowlistable.
+SECRET_ALLOWLIST=()
 SECRET_MIN_LEN=8
 # Pathspecs the `--all` sweep scans. Staged mode ALWAYS scans every staged file.
 FORBIDDEN_GLOBS=('.')
@@ -145,6 +150,16 @@ line_all_placeholders() {  # $1 = line, $2 = assign regex
   done < <(printf '%s\n' "$lline" | grep -oE -e "$2" || true)
   [ "$found" -eq 1 ]
 }
+allowlisted() {  # $1 = file path, $2 = line content (no "N:" prefix)
+  for a in ${SECRET_ALLOWLIST[@]+"${SECRET_ALLOWLIST[@]}"}; do
+    [ -n "$a" ] || continue
+    fre="${a%%|*}"; lre="${a#*|}"
+    printf '%s\n' "$1" | grep -Eq -e "$fre" || continue
+    printf '%s\n' "$2" | grep -Eq -e "$lre" || continue
+    return 0
+  done
+  return 1
+}
 report_hit() { if [ "$1" -eq 0 ]; then err "forbidden pattern detected:"; fi; }
 hit=0
 while IFS= read -r f; do
@@ -163,6 +178,8 @@ while IFS= read -r f; do
   fi
   while IFS= read -r line; do
     if line_all_placeholders "$line" "$assign_re"; then continue; fi
+    # `line` carries grep's "N:" prefix; the allowlist judges the content only.
+    if allowlisted "$f" "${line#*:}"; then continue; fi
     report_hit "$hit"; hit=1
     printf '        %s: %s\n' "$f" "$line" >&2
   done < <(printf '%s\n' "$body" | grep -nIiE -e "$assign_re" || true)

@@ -74,6 +74,12 @@ Claude-specific: when a task touches a topic, read the index and open the
 matching files. Save new durable facts there (and index them) instead of
 re-learning them every session.
 
+Everything there is committed and reviewed like code, so keep personal notes out
+of it: use a `user-*.md` / `*.local.md` file (both git-ignored) or your own agent
+memory outside the repo. This repo never links or moves anything under your
+personal agent directory; if an older ic-praxis version did, undo it with
+`bash scripts/unlink-claude-memory.sh`.
+
 ## What auto-loads here and what doesn't
 The commit gate (`.githooks/pre-commit` → `scripts/check-conventions.sh`) is a
 git hook — it fires no matter which agent (or human) makes the commit.

@@ -36,8 +36,8 @@
 | **1. 헌법(Constitution)** | `CLAUDE.md` + `AGENTS.md` | 에이전트가 매 세션 읽는 규칙: 작업 순서, 위임 책임, 강한 "하지 말 것"(각각 *왜*를 명시). 공유 규칙 블록 하나가 두 파일에 미러링되고 **drift가 게이트로 차단**된다 — Claude Code와 Codex가 같은 법을 읽는다. |
 | **2. 4단 문서 체계** | `docs/` | 변경이 코드가 되기 전에 spec → scope → backlog → done 흐름으로 문서화된다. |
 | **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. |
-| **4. 공유 메모리** | `.claude/memory/` + `scripts/setup-claude-memory.sh` | 세션을 넘어 지속되는 사실을 파일 1개=사실 1개로 인덱싱 — **git으로 버전 관리**돼 초기화돼도 교훈이 살아남고 팀과 공유된다. 범용 스타터 규칙 몇 개 포함. |
-| **5. 검증 스킬** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증. Claude Code와 Codex가 하나의 정본 절차로 이어지는 각자의 네이티브 진입점을 가진다. |
+| **4. 공유 메모리** | `.claude/memory/` | 파일 1개=사실 1개로 인덱싱된 **팀 지식**. `MEMORY.md` 색인을 통해 **필요할 때 읽는다**. git으로 버전 관리돼 컨텍스트가 초기화돼도 교훈이 살아남고 PR로 공유된다. 개인 메모는 제외(`user-*.md` · `*.local.md` 는 git-ignore). 범용 스타터 규칙 몇 개 포함. |
+| **5. 검증 스킬** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증(절차는 스킬에, 실행 스크립트는 `scripts/` 에). Claude Code와 Codex가 하나의 정본 절차로 이어지는 각자의 네이티브 진입점을 가진다. |
 
 핵심은 축 3이 축 1로 이어지는 고리다: **검증 가능한 규칙을 낳은 회고는, 잊을 수 없는 게이트가 된다.**
 
@@ -178,19 +178,24 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 
 **Linux · macOS · Windows(Git Bash) 모두에서 동작한다.** 스크립트는 macOS 기본
 bash 3.2에서도 돈다(`declare -A`/`mapfile` 미사용). 함께 배포되는 `.gitattributes`가
-`*.sh`/훅/`version`을 LF로 고정해 CRLF 체크아웃이 게이트를 깨지 못하게 하고,
-`setup-claude-memory.sh`는 심볼릭 링크에 개발자 모드가 필요한 Windows에서 NTFS
-정션으로 폴백한다. Windows에서는 모든 명령을 **Git Bash**에서 실행할 것.
+`*.sh`/훅/`version`을 LF로 고정해 CRLF 체크아웃이 게이트를 깨지 못하게 한다.
+Windows에서는 모든 명령을 **Git Bash**에서 실행할 것.
 
-그다음 게이트 활성화 + 메모리 git 버전 관리:
+설치 스크립트는 **대상 저장소 안에만** 쓴다 — 개인 `~/.claude/` 는 절대 건드리지
+않는다. 저장소에 이미 `.gitignore` · `.gitattributes` 가 있으면 파일을 건너뛰지 않고
+빠진 줄만 덧붙이므로, 개인 파일 차단 패턴(`settings.local.json` · `user-*.md` ·
+`*.local.md`)이 항상 들어간다.
+
+그다음 게이트를 활성화한다:
 
 ```bash
 bash scripts/install-hooks.sh        # 커밋 게이트 활성화
-bash scripts/setup-claude-memory.sh  # 메모리 git 버전 관리 + 매 세션 로드
 ```
 
 원시 설치 스크립트를 돌린 뒤에도 `/praxis-init`은 꼭 실행하라 — 에이전트가 이 프로젝트에
 맞게 튜닝하기 전까지 스캐폴드는 범용인 채로 남는다.
+
+걷어내는 절차: [`docs/uninstall.md`](docs/uninstall.md).
 
 ---
 
@@ -258,7 +263,13 @@ flowchart TD
   (`foo: hunter2...`, `FOO=...`)은 설정형 파일(`.env`/`.yaml`/`.ini`/… — 필요하면
   `BARE_VALUE_FILES_RE`를 넓힐 것)에서 검사한다. placeholder 허용목록(`CHANGE_ME`,
   `{{...}}` 등)은 **추출된 값에만** 적용되므로, 같은 줄의 주석이 진짜 시크릿을
-  면제시키지 못한다.
+  면제시키지 못한다. 키 목록은 `password`/`token`/`api_key`/`secretKey` 에 더해
+  `jwtSecret` · `clientSecret` 까지 잡는다 — 프로젝트가 다른 단어를 쓰면 여기에 추가한다.
+- `SECRET_ALLOWLIST` *(선택)* — 정책적으로 평문이어야 하는 값(데모 관리자 비밀번호,
+  픽스처 토큰)을 위한 **좁은 예외**. 한 줄에 하나씩 `'파일경로정규식|줄정규식'` 으로
+  적고, 줄 정규식에 **실제 값을 그대로** 넣는다 → 값이 바뀌면 게이트가 다시 걸려
+  누군가 재승인해야 한다. 게이트를 끄거나 `--no-verify` 하는 대신 쓰는 장치이며,
+  리터럴 AWS 키·개인키(`FORBIDDEN_PATTERNS`)에는 예외를 적용할 수 없다.
 - `DEPLOY_MANIFESTS` *(선택)* — version bump를 Helm/k8s/compose 매니페스트의 이미지 태그와
   동기화 → bump만 올라가고 옛 이미지가 배포되는 것을 막는다.
 
@@ -273,7 +284,7 @@ ic-praxis는 한 레포의 형태에서 출발했지만, 모든 프로젝트가 
 | 모듈 | 켜는 때 | 추가되는 것 | 활성화 |
 |---|---|---|---|
 | **monorepo** | 배포 단위 >1 | 영역별 `AREA_CODE_RE`/`AREA_VFILE`, 루트 `version` 없음 | `/praxis-init` 감지 · `--no-version` |
-| **multi-session** | 여러 세션을 병렬로 굴리는 허브 | `.claude/agents/worker.md`(하위 단위 전용 워커) + `.claude/settings.json` push 전 리마인더 + CLAUDE.md 다중세션 규칙 | `install.sh --multi-session` · `/praxis-init` 질문 |
+| **multi-session** | 여러 세션을 병렬로 굴리는 허브 | `.claude/agents/worker.md`(하위 단위 전용 워커) + `.claude/settings.json` push 전 리마인더 + CLAUDE.md 다중세션 규칙. ⚠️ 공용 저장소에서는 커밋된 `settings.json` 이 팀원 전원의 세션에 적용된다 — 팀 결정 사항 | `install.sh --multi-session` · `/praxis-init` 질문 |
 | **deploy-manifest** | k8s / Helm / compose | `DEPLOY_MANIFESTS` 동기 게이트(version ↔ 이미지 태그) | `/praxis-init` 감지 |
 
 **multi-session** 모듈이 존재하는 이유: 5축은 *단일* 세션을 잘 규율하지만, 하나의 작업
@@ -281,6 +292,27 @@ ic-praxis는 한 레포의 형태에서 출발했지만, 모든 프로젝트가 
 모듈의 답: 메인 세션 1개 + 각자 하위 단위 하나만 맡고 요약을 되돌려주는 서브에이전트 —
 그래서 공유 상태는 메인 세션이 단독으로 쓴다. 단일 세션 프로젝트는 꺼두면 된다. 켜두면
 세금만 문다.
+
+## 공용 저장소인가? 두 가지를 먼저 정한다
+
+혼자 쓰는 저장소와 팀 저장소는 기본값이 달라야 한다. ic-praxis 는 **공용**을 전제한다 —
+설치되는 모든 것은 저장소 안에 있고, 개인 `~/.claude/` 는 건드리지 않는다. 경계 두 개를
+분명히 해 두는 게 좋다.
+
+**1. `.claude/memory/` 는 팀 지식이지 개인 노트가 아니다.** 코드처럼 커밋되고 리뷰되며,
+**필요할 때 읽는다** — 헌장이 "주제에 닿으면 `MEMORY.md` 색인을 열어라"고 지시한다.
+개인 메모는 `.claude/memory/user-*.md` 또는 `*.local.md` 에 두며, 배포되는 `.gitignore`
+가 둘 다 무시한다. (v0.5.3 까지는 자동 로드를 얻으려고 `setup-claude-memory.sh` 가 저장소를
+개인 메모리 경로에 symlink 했다. 공용 저장소에서는 개인 메모가 팀 작업트리로 새고,
+인코딩된 경로가 "어느 디렉터리에서 세션을 열었는지"에 따라 달라졌다. v0.6.0 에서 제거했고,
+`scripts/unlink-claude-memory.sh` 가 링크를 풀고 백업을 되돌린다.)
+
+**2. 커밋된 `.claude/` 는 팀원 전원에게 적용된다.** 저장소의 `.claude/` 는 각자의
+`~/.claude/` 보다 우선한다 — 여기 커밋된 `settings.json` 키가 개인 설정을 이기고, 여기
+정의된 hook 은 팀원 세션에서도 함께 실행되며, 같은 이름의 커맨드·스킬은 개인 것을 가린다.
+팀이 합의한 규칙이라면 좋은 일이지만, 그 말은 `.claude/settings.json` 을 커밋하는 것
+(**multi-session** 모듈이 하는 일)이 **모두의 환경을 바꾸는 결정**이라는 뜻이다. 팀 결정으로
+다루고, `/praxis-init` 은 그 모듈을 켜기 전에 묻는다.
 
 ## 다른 룰셋과 함께 쓰기
 
