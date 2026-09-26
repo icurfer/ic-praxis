@@ -35,7 +35,7 @@
 |---|---|---|
 | **1. 헌법(Constitution)** | `CLAUDE.md` + `AGENTS.md` | 에이전트가 매 세션 읽는 규칙: 작업 순서, 위임 책임, 강한 "하지 말 것"(각각 *왜*를 명시). 공유 규칙 블록 하나가 두 파일에 미러링되고 **drift가 게이트로 차단**된다 — Claude Code와 Codex가 같은 법을 읽는다. |
 | **2. 4단 문서 체계** | `docs/` | 변경이 코드가 되기 전에 spec → scope → backlog → done 흐름으로 문서화된다. |
-| **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. |
+| **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. **두 번 돈다** — 커밋 시점에 로컬에서, 그리고 CI에서 한 번 더. 훅이 안 걸린 clone 이나 `--no-verify` 가 통과하지 못한다. |
 | **4. 공유 메모리** | `.claude/memory/` | 파일 1개=사실 1개로 인덱싱된 **팀 지식**. `MEMORY.md` 색인을 통해 **필요할 때 읽는다**. git으로 버전 관리돼 컨텍스트가 초기화돼도 교훈이 살아남고 PR로 공유된다. 개인 메모는 제외(`user-*.md` · `*.local.md` 는 git-ignore). 범용 스타터 규칙 몇 개 포함. |
 | **5. 검증 스킬** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증(절차는 스킬에, 실행 스크립트는 `scripts/` 에). Claude Code와 Codex가 하나의 정본 절차로 이어지는 각자의 네이티브 진입점을 가진다. |
 
@@ -189,7 +189,7 @@ Windows에서는 모든 명령을 **Git Bash**에서 실행할 것.
 그다음 게이트를 활성화한다:
 
 ```bash
-bash scripts/install-hooks.sh        # 커밋 게이트 활성화
+bash scripts/install-hooks.sh        # 커밋 게이트 활성화 (clone 마다)
 ```
 
 원시 설치 스크립트를 돌린 뒤에도 `/praxis-init`은 꼭 실행하라 — 에이전트가 이 프로젝트에

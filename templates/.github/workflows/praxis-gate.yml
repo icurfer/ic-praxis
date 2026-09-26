@@ -1,0 +1,57 @@
+# praxis gate — CI half of the pre-commit gate.
+#
+# WHY THIS EXISTS
+#   The local gate lives behind `core.hooksPath`, which is per-clone config. A
+#   fresh clone has it OFF until someone runs `scripts/install-hooks.sh`, and
+#   `git commit --no-verify` leaves no trace. So the gate that "can't be
+#   forgotten" is, in fact, one local setting away from silently not running.
+#   This job re-runs the SAME script on the server, where nobody can skip it.
+#
+# HOW IT WORKS
+#   check-conventions.sh judges the STAGED blob (`git show ":$f"`) — that is the
+#   whole point: it checks what actually gets committed. CI has nothing staged,
+#   so we stage the entire change set with `git reset --soft <base>` and run the
+#   script UNMODIFIED. Same code path as the hook, no CI-only branch to rot.
+#
+#   Consequence (intended): the hook judges one commit, this judges the whole
+#   PR. Splitting "code" and "version bump" across two commits still passes here
+#   — by the time it merges, both are present.
+#
+# Works on GitHub Actions and Gitea Actions (same syntax).
+name: praxis gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need history to resolve the base commit
+
+      - name: Resolve base commit
+        id: base
+        run: |
+          set -euo pipefail
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          # New branch / first push reports an all-zero SHA — fall back to the
+          # empty tree so the whole repo is treated as added.
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git hash-object -t tree /dev/null)"
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+          echo "base = $base"
+
+      - name: Stage the whole change set
+        run: git reset --soft "${{ steps.base.outputs.sha }}"
+
+      - name: Run the praxis gate
+        run: bash scripts/check-conventions.sh

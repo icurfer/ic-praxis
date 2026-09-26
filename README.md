@@ -31,7 +31,7 @@ A five-axis scaffold, dropped into any repo:
 |---|---|---|
 | **1. Constitution** | `CLAUDE.md` + `AGENTS.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). One shared rule block, mirrored in both files and **drift-gated** — Claude Code and Codex read the same law. |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
-| **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. |
+| **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. **Runs twice** — locally at commit time, and again in CI so a clone without the hook (or a `--no-verify`) can't slip past. |
 | **4. Shared memory** | `.claude/memory/` | Team knowledge, one fact per file, indexed in `MEMORY.md` and **read on demand** — git-versioned, so lessons survive context resets and travel by PR. Personal notes stay out (`user-*.md` / `*.local.md` are git-ignored). Ships a few universal starter rules. |
 | **5. Verify skill** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts (the procedure is the skill; the runnable helpers live in `scripts/`). Claude Code and Codex each get a native entrypoint to one canonical procedure. |
 
@@ -189,7 +189,7 @@ guards (`settings.local.json`, `user-*.md`, `*.local.md`) always land.
 Then activate the gate:
 
 ```bash
-bash scripts/install-hooks.sh        # activate the commit gate
+bash scripts/install-hooks.sh        # activate the commit gate (per clone)
 ```
 
 Even after the raw installer, still run `/praxis-init` — the scaffold stays
