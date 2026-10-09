@@ -17,3 +17,6 @@ memory.bak.*
 
 # Local task records and execution metadata (may contain private task details).
 /harness/.state/
+
+# Transient profile selection lock (remove after confirming no selector is running).
+/harness/config/profile.json.lock

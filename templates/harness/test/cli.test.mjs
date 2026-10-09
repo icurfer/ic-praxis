@@ -21,6 +21,8 @@ function fixture(t) {
   const cli = (args, expected = 0) => run(process.execPath, ['harness/bin/praxis.mjs', ...args], expected);
   const git = (...args) => run('git', args);
   git('init', '-q'); git('config', 'user.name', 'Harness Test'); git('config', 'user.email', 'test@example.invalid');
+  fs.writeFileSync(path.join(root, 'harness/config/profile.json'), JSON.stringify({ schemaVersion: 1, profile: null }));
+  cli(['profile', 'select', 'development']);
   fs.writeFileSync(path.join(root, 'version'), '0.0.0');
   git('add', '.'); git('-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'fixture');
   const config = checks => fs.writeFileSync(path.join(root, 'harness/config/project.json'), JSON.stringify({ schemaVersion: 1, checks }));

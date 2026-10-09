@@ -8,6 +8,7 @@ description: Adopt and customize the ic-praxis scaffold for the current reposito
 Read `../../../.claude/commands/praxis-init.md` completely and follow it as the
 canonical adoption procedure.
 
+- Follow the canonical type-selection step before development customization; do not guess development versus infrastructure.
 - Treat the user's current project description as `$ARGUMENTS`.
 - In Codex, “parallel sessions” means parallel Codex sessions or sub-agents;
   do not assume the user runs Claude Code.

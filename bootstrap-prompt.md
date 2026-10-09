@@ -87,7 +87,20 @@ build, and CI first):
    second source that can drift.
 
 Also install **`harness/` by default** (not an opt-in module): a dependency-free
-Node.js 18+ CLI, `harness/bin/praxis.mjs`, with `task init/check/validate/status`.
+Node.js 18+ CLI, `harness/bin/praxis.mjs`. Ask the user to select development or
+infrastructure FIRST (honor an existing explicit choice). Persist the choice in
+`harness/config/profile.json`, initially null; unselected task execution fails.
+Expose `profile select development|infrastructure` and `profile status`.
+Keep a common router in `src/main.mjs`, development implementation in
+`src/development.mjs`, and separate guides in `profiles/development/` and
+`profiles/infrastructure/`. Only development implements `task init/check/validate/status`.
+Infrastructure is currently a pending integration placeholder: record the reference
+project in `config/infrastructure.json`, with no invented operational procedures,
+no development fallback and no operations execution. Stop infrastructure adoption
+after type/reference setup, preserving existing operational rules. Both types
+keep CI off. Preserve selections on normal reinstall; changing types needs a
+reviewed migration, not `--force`. Existing development checks/records stay in place.
+The requirements below describe development, not infrastructure operations.
 Use a versioned JSON project config listing named executable argument arrays and
 timeouts. Start with no checks until real project commands are configured; empty
 or malformed settings must fail closed. Default tasks to big changes requiring

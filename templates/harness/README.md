@@ -8,12 +8,55 @@ local commit hooks remain usable without Node. No npm install is required.
 있습니다. 처음에는 에이전트가 프로젝트에 맞는 검사 명령을 설정합니다.
 검사가 미설정된 상태는 통과로 처리하지 않습니다. CI는 켜지지 않습니다.
 
+## Choose the type first / 종류 선택
+
+Fresh installs have `profile: null` in `config/profile.json`. When you ask the
+agent to apply this harness, `praxis-init` asks you to choose:
+
+- **개발용 / development**: existing code tasks and test/build validation.
+- **인프라용 / infrastructure**: separate integration placeholder; operational
+  execution will be designed from a reference project supplied later.
+
+```bash
+node harness/bin/praxis.mjs profile select development
+# Or: node harness/bin/praxis.mjs profile select infrastructure
+node harness/bin/praxis.mjs profile status
+```
+
+No task runs until a type is selected. The agent honors a choice you already
+made. Ordinary reinstalls preserve it. Switching an existing type is deliberately
+not a selection operation: review configuration and local task migration first.
+`--force` remains destructive template replacement and must not be used to switch.
+An upgrade from pre-profile releases asks for the type once; existing development
+checks and records stay in place. Both types keep CI off by default.
+
+```text
+harness/
+├── config/
+│   ├── profile.json          # selected type (null initially)
+│   ├── project.json          # development checks, existing format preserved
+│   └── infrastructure.json   # reference project and notes, no operations yet
+├── profiles/
+│   ├── development/README.md
+│   └── infrastructure/README.md
+└── src/
+    ├── main.mjs              # shared selection and routing
+    ├── development.mjs       # development task implementation
+    └── run.mjs               # shared bounded command runner
+```
+
+Infrastructure selection succeeds, but `profile status` returns 1 (pending) and
+all task commands remain blocked. Recording a reference does not enable execution.
+Read only the selected guide under `profiles/`. The remaining command/check/record
+sections describe **development**; they do not define an infrastructure workflow.
+
 ## Commands
 
 Run from the installed repository (subdirectories also work):
 
 ```bash
 node harness/bin/praxis.mjs --help
+node harness/bin/praxis.mjs profile select development
 node harness/bin/praxis.mjs task init login-fix --title "Fix login" --size small
 node harness/bin/praxis.mjs task check login-fix
 node harness/bin/praxis.mjs task validate login-fix

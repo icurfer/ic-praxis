@@ -197,10 +197,10 @@ if [ "$WITH_CI" -eq 0 ]; then
     echo "  Note: an existing praxis CI workflow was preserved; this does not disable it."
   fi
 fi
-echo "  harness/: task setup, status and validation (Node.js 18+; no npm install)."
-echo "  Ask your agent to start a task, configure checks, or show task status."
+echo "  harness/: choose development or infrastructure during /praxis-init (Node.js 18+)."
+echo "  No type is selected on a fresh install. Infrastructure is a pending integration scaffold."
 echo "Next (from the project root):"
-echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
+echo "  1) choose the harness type with your agent (development / infrastructure)."
 echo "  2) in Claude Code, customize:     /praxis-init <one line about your project>"
 echo "     (recommended — inspects the repo, tunes the gate & modules, proves it blocks a bad commit)"
 echo "     in Codex, customize:            \$praxis-init <one line about your project>"

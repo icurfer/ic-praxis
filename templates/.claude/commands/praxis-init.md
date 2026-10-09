@@ -13,11 +13,27 @@ $ARGUMENTS
 
 Do this:
 
-The default install includes `harness/`. Read `harness/README.md`, check Node.js
-18+ availability, and configure `harness/config/project.json` from actual project
-test/build commands. Keep checks empty and explain the blocker if no meaningful
-verification exists yet. Introduce natural-language task/status/verification
-requests via the canonical `praxis-task` procedure; users need not learn the CLI.
+**Select the harness type FIRST.** Read `harness/config/profile.json` and
+`harness/README.md`. If no type is selected, ask: "개발용(코드·테스트·빌드)과
+인프라용(서버·클러스터 운영, 현재 연동 준비) 중 어떤 하네스를 적용할까요?"
+Honor an explicit choice already made by the user; do not infer it from files or
+silently default to development. Without an answer, leave the selection unset.
+Check Node.js 18+ is available and run
+`node harness/bin/praxis.mjs profile select development` or `... select infrastructure`.
+Preserve an existing selection; a request to change it needs a migration plan
+that preserves configuration and task records, not a forced reinstall.
+
+- **Infrastructure:** read `harness/profiles/infrastructure/README.md`. Record the
+  user's reference project in `harness/config/infrastructure.json` if supplied;
+  otherwise leave it null and explain that it can be provided later. This is a
+  placeholder, not an implemented operations harness. Stop this adoption flow
+  after recording the choice: do not apply the development sizing/doc/version
+  workflow below, configure development checks, or activate hooks/CI for it.
+  Existing project rules and operational workflows remain in force.
+- **Development:** read `harness/profiles/development/README.md`, configure real
+  test/build commands in `harness/config/project.json`, then follow the adoption
+  steps below. Keep checks empty and explain the blocker if no meaningful checks
+  exist. Introduce natural-language requests via `praxis-task`.
 
 Keep praxis CI off by default: do not create or enable a CI workflow unless
 the user explicitly requests it. Local commit checks work without CI. Explain

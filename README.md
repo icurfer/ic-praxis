@@ -406,6 +406,34 @@ bash scripts/praxis-review.sh   # structural sprawl: orphan/dangling memory, gro
 The result is a system that **starts tiny, grows only what your incidents earn, and
 curates itself** — the opposite of shipping someone else's mega-framework on day one.
 
+## Harness type selection
+
+When you ask an agent to apply the harness, `/praxis-init` (Codex: `$praxis-init`)
+first asks **development or infrastructure**. An explicit choice already provided
+is honored. Fresh installs create `harness/config/profile.json` with no selection;
+task commands cannot silently start in development mode.
+
+| Type | Current behavior | Guide |
+|---|---|---|
+| `development` | Existing task/check/validate/status workflow; checks in `config/project.json` | `harness/profiles/development/README.md` |
+| `infrastructure` | Integration placeholder; reference in `config/infrastructure.json`; operations not implemented | `harness/profiles/infrastructure/README.md` |
+
+The infrastructure workflow will be derived from a user-supplied operations
+project later. Selecting it does not execute development checks or activate
+operational commands. Both types keep CI off. Scripted selection after install:
+
+```bash
+node harness/bin/praxis.mjs profile select development
+# Or: node harness/bin/praxis.mjs profile select infrastructure
+node harness/bin/praxis.mjs profile status
+```
+
+Ordinary reinstalls preserve the choice, checks and local records. Existing
+pre-profile installations select their type once after upgrade. Changing a selected
+type requires a reviewed migration; do not use `--force` as a type switch.
+The raw installer copies files and leaves selection to the agent/CLI, so piped
+installation does not require interactive terminal input.
+
 ## Built-in task harness
 
 Every install now includes `harness/`: a local CLI for task creation, prerequisite
@@ -415,10 +443,11 @@ remain usable without Node.
 
 You can ask your agent **“start this task”**, **“validate my changes”**, or
 **“show task status”**. Claude Code uses `/praxis-task`; Codex uses `$praxis-task`.
-During `/praxis-init`, the agent configures real test/build commands in
+After selecting development during `/praxis-init`, the agent configures real test/build commands in
 `harness/config/project.json`. An empty check list never passes validation.
 
 ```bash
+node harness/bin/praxis.mjs profile select development
 node harness/bin/praxis.mjs task init fix-login --title "Fix login" --size small
 node harness/bin/praxis.mjs task check fix-login
 node harness/bin/praxis.mjs task validate fix-login

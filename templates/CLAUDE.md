@@ -54,10 +54,15 @@ changed, add **one `CHANGELOG` line** and tick `backlog.md`. Done.
 
 ## Task harness
 
-`harness/` is installed by default. Use the `praxis-task` procedure to create a
-task, check prerequisites, run project checks and report status. Configure real
-checks during adoption; an empty check list never counts as passed. Revalidate
-after code changes. CI stays off unless explicitly requested.
+`harness/` is installed by default, initially with no type selected. Before
+adoption, ask the user to choose development or infrastructure via `praxis-init`
+and persist it in `harness/config/profile.json`; honor an existing explicit choice.
+The development work order/change-size rules above apply only to development.
+For infrastructure, follow `harness/profiles/infrastructure/README.md`: reference
+integration is pending and operational execution is not implemented. Preserve
+existing operational rules; do not substitute the development flow.
+Use `praxis-task` to route requests by type. Development requires real checks and
+revalidation after code changes. CI stays off for both unless explicitly requested.
 
 ## Automated gate
 The mechanically-checkable rules above are enforced at commit time by

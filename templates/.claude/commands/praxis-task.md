@@ -1,10 +1,16 @@
 ---
-description: Start, inspect or validate a development task using the installed harness
+description: Route task requests by the selected harness type; run development tasks or explain pending infrastructure setup
 ---
 
 Use this procedure when the user asks to start a task, check progress or verify
 work. Explain the result in the user's language; users need not learn commands.
 The executable lives in `harness/`, shared by Claude Code and Codex.
+
+First read `harness/config/profile.json`. If the type is unset, follow the type
+selection step in `.claude/commands/praxis-init.md` before creating any task.
+If it is `infrastructure`, read `harness/profiles/infrastructure/README.md`,
+explain pending reference-project integration and stop; do not run development
+commands as a substitute. Only `development` uses the procedure below.
 
 1. Read `harness/README.md` and `harness/config/project.json`. Check Node.js 18+
    is available. If missing, explain the prerequisite; local Git gates still work.

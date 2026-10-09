@@ -395,6 +395,34 @@ bash scripts/praxis-review.sh   # 구조적 sprawl: 고아/dangling 메모리, �
 결과는 **작게 시작해, 당신의 사고가 번 것만 자라고, 스스로 선별되는** 체계다 —
 첫날부터 남의 메가 프레임워크를 통째로 짊어지는 것과 정반대다.
 
+## 하네스 종류 선택
+
+에이전트에게 “하네스 적용해줘”라고 요청하면 `/praxis-init`(Codex: `$praxis-init`)에서
+먼저 **개발용 / 인프라용**을 선택합니다. 이미 명시한 선택은 그대로 사용합니다.
+새 설치의 `harness/config/profile.json`은 미선택 상태이며, 선택 없이 개발 작업을
+자동으로 시작하지 않습니다.
+
+| 종류 | 현재 동작 | 안내 |
+|---|---|---|
+| `development` — 개발용 | 기존 작업 생성·조건 검사·검증·상태 조회. 검사 설정은 `config/project.json` | `harness/profiles/development/README.md` |
+| `infrastructure` — 인프라용 | 연동 준비만 제공. `config/infrastructure.json`에 참고 프로젝트 기록. 운영 실행 미구현 | `harness/profiles/infrastructure/README.md` |
+
+인프라 절차는 나중에 사용자가 지정한 운영 프로젝트를 참고해 구현합니다. 인프라용을
+선택해도 개발용 검사나 운영 명령을 실행하지 않습니다. 두 종류 모두 CI는 기본으로
+꺼져 있습니다. 설치 후 직접 선택하는 명령은 다음과 같습니다.
+
+```bash
+node harness/bin/praxis.mjs profile select development
+# 또는: node harness/bin/praxis.mjs profile select infrastructure
+node harness/bin/praxis.mjs profile status
+```
+
+일반 재설치는 선택·검사 설정·로컬 기록을 보존합니다. 유형 구분 이전 버전에서
+업데이트하면 한 번 유형을 선택합니다. 이미 선택한 유형의 변경은 기록과 설정의
+이전 계획을 검토한 후 진행해야 하며, `--force`를 유형 변경 용도로 사용하지 않습니다.
+설치 스크립트 자체는 파일을 복사하고 선택을 에이전트/CLI에 맡기므로, 파이프로 실행할
+때 터미널 입력을 요구하지 않습니다.
+
 ## 기본 작업 하네스
 
 설치하면 `harness/`가 기본 생성됩니다. 작업 생성, 시작 조건 검사, 프로젝트 검증,
@@ -404,10 +432,11 @@ Bash 커밋 검사는 사용할 수 있습니다.
 
 에이전트에게 **“이 작업 시작해줘”**, **“변경 사항 검증해줘”**, **“현재 상태 알려줘”**라고
 요청하면 됩니다. Claude Code에서는 `/praxis-task`, Codex에서는 `$praxis-task`로도
-호출합니다. `/praxis-init` 과정에서 에이전트가 실제 테스트·빌드 명령을
+호출합니다. `/praxis-init`에서 개발용을 선택한 뒤 에이전트가 실제 테스트·빌드 명령을
 `harness/config/project.json`에 설정합니다. 검사 명령이 없으면 검증을 통과시키지 않습니다.
 
 ```bash
+node harness/bin/praxis.mjs profile select development
 node harness/bin/praxis.mjs task init fix-login --title "로그인 수정" --size small
 node harness/bin/praxis.mjs task check fix-login
 node harness/bin/praxis.mjs task validate fix-login

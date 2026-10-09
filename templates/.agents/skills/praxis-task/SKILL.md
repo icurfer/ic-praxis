@@ -1,6 +1,6 @@
 ---
 name: praxis-task
-description: Start a development task, show its status, or run project validation through the installed praxis harness. Use for natural-language task and verification requests.
+description: Route task and verification requests by the selected praxis harness type. Run development tasks; report pending setup for the infrastructure profile.
 ---
 
 Read `../../../.claude/commands/praxis-task.md` completely and follow the canonical
