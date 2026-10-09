@@ -14,3 +14,6 @@
 # Backups left by ic-praxis <= v0.5.3's setup-claude-memory.sh (removed in
 # v0.6.0). Restore yours with: bash scripts/unlink-claude-memory.sh
 memory.bak.*
+
+# Local task records and execution metadata (may contain private task details).
+/harness/.state/

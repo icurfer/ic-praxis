@@ -79,6 +79,16 @@ content() {
   else git show ":$1" 2>/dev/null; fi
 }
 
+# Audit the exact distributable staged tree, never consumer-specific policy.
+if [ "$MODE" = "--all" ]; then
+  node scripts/check-portability.mjs templates
+else
+  audit_dir="$(mktemp -d)"
+  trap 'rm -rf "$audit_dir"' EXIT
+  git archive "$(git write-tree)" templates | tar -x -C "$audit_dir"
+  node scripts/check-portability.mjs "$audit_dir/templates"
+fi
+
 # ── Gate A: scaffold changed but 'version' not bumped ───────────────────────
 # A staged DELETION of the version file is never a bump — it removes the signal.
 for i in "${!AREA_CODE_RE[@]}"; do

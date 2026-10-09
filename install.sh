@@ -21,6 +21,7 @@
 # the modules your project shape needs. The flags below are for scripted/CI use.
 #
 # Flags:
+#   --ci               install the optional CI workflow (off by default)
 #   --force            overwrite existing files (default: never overwrite)
 #   --no-version       don't seed a root 'version' file (per-area version repos)
 #   --no-docs          don't scaffold docs/ (project already has a doc system)
@@ -35,7 +36,7 @@ set -euo pipefail
 BRANCH="main"
 TARBALL="https://codeload.github.com/icurfer/ic-praxis/tar.gz/refs/heads/${BRANCH}"
 REPO_URL="https://github.com/icurfer/ic-praxis.git"   # git fallback only
-FORCE=0; NO_VERSION=0; NO_DOCS=0; MULTI_SESSION=0
+FORCE=0; NO_VERSION=0; NO_DOCS=0; MULTI_SESSION=0; WITH_CI=0
 TARGET="."
 for a in "$@"; do
   case "$a" in
@@ -43,6 +44,7 @@ for a in "$@"; do
     --no-version) NO_VERSION=1 ;;
     --no-docs) NO_DOCS=1 ;;
     --multi-session) MULTI_SESSION=1 ;;
+    --ci) WITH_CI=1 ;;
     *) TARGET="$a" ;;
   esac
 done
@@ -95,6 +97,7 @@ COPIED_FILES=()
 while IFS= read -r -d '' f; do
   rel="${f#"$SRC"/}"
   case "$rel" in
+    .github/workflows/*) [ "$WITH_CI" -eq 0 ] && { echo "  skip (CI off): $rel"; skipped=$((skipped+1)); continue; } ;;
     docs/*) [ "$skip_docs" -eq 1 ] && { echo "  skip (docs off): $rel"; skipped=$((skipped+1)); continue; } ;;
   esac
   dest="$TARGET/$rel"
@@ -187,6 +190,15 @@ done
 
 echo ""
 echo "✓ scaffolded ($copied new, $skipped kept)."
+if [ "$WITH_CI" -eq 0 ]; then
+  echo "  CI: no workflow installed. Local commit checks are available without CI."
+  echo "  Enable later only if wanted: bash /path/to/ic-praxis/install.sh --ci ."
+  if [ -e "$TARGET/.github/workflows/praxis-gate.yml" ]; then
+    echo "  Note: an existing praxis CI workflow was preserved; this does not disable it."
+  fi
+fi
+echo "  harness/: task setup, status and validation (Node.js 18+; no npm install)."
+echo "  Ask your agent to start a task, configure checks, or show task status."
 echo "Next (from the project root):"
 echo "  1) activate the commit gate:      bash scripts/install-hooks.sh"
 echo "  2) in Claude Code, customize:     /praxis-init <one line about your project>"

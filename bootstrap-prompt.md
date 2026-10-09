@@ -55,6 +55,10 @@ build, and CI first):
    `.gitattributes` pinning `*.sh`, `.githooks/*`, and `version` to `eol=lf` so
    Windows checkouts don't break the hook. Emergency bypass:
    `git commit --no-verify`.
+   Keep CI off by default: do not create or enable a CI workflow unless the user
+   explicitly requests it. Local commit checks work without CI. Preserve any
+   existing workflows and explain that they remain active. With the installer,
+   `--ci` explicitly opts in to the praxis workflow later.
 
 4. **`.claude/memory/`** — one fact per file with a `type:` (feedback / project
    / reference / user), indexed in `MEMORY.md`; feedback/project facts include
@@ -82,6 +86,22 @@ build, and CI first):
    of duplicating it, so Codex discovers the workflow without creating a
    second source that can drift.
 
+Also install **`harness/` by default** (not an opt-in module): a dependency-free
+Node.js 18+ CLI, `harness/bin/praxis.mjs`, with `task init/check/validate/status`.
+Use a versioned JSON project config listing named executable argument arrays and
+timeouts. Start with no checks until real project commands are configured; empty
+or malformed settings must fail closed. Default tasks to big changes requiring
+nonempty plan files; preserve existing task IDs. Reuse the staged Git gate before
+running checks and retain the actual pre-commit hook. Store local task/validation
+metadata in ignored `harness/.state/`, block concurrent writers and out-of-repo
+paths, and invalidate old passes when HEAD, index or tracked/nonignored files
+change. Do not claim plan quality or external state has been proven. Invalidate a
+prior pass before commands run and reject checks that change fingerprinted files.
+Add meaningful failure/freshness tests and the canonical `.claude/commands/praxis-task.md`
+procedure plus a thin `.agents/skills/praxis-task/SKILL.md` adapter. Users can ask
+in natural language to start, validate or inspect a task. No automatic CI,
+branch creation, commit, push or deployment. Keep local Bash gates usable without Node.
+
 Then apply ONLY the modules this repo's shape needs (skip the rest): **monorepo**
 (per-area version files), **deploy-manifest** (a gate syncing the version to a
 Helm/k8s image tag), and — only if this hub is run with several parallel sessions
@@ -95,3 +115,23 @@ customized.
 
 Guiding principle: don't water the gate down. Tune it to fire on THIS project's
 real mistakes. Rules that rely on human memory eventually break again.
+
+
+### Harness hardening (0.8.1)
+
+Validation status exits nonzero for stale, failed or missing evidence. Staged
+semantic versions must increase relative to HEAD. First-push CI uses a valid
+empty baseline commit. On POSIX, timeout and interruption stop the started
+process group; Windows stops the direct process. CI remains opt-in.
+
+
+### Distribution boundaries and execution inputs (0.8.2)
+
+Audit shipped templates with `node scripts/check-portability.mjs templates`.
+An optional external JSON policy (`{"deny":["private-literal"]}`) can add
+consumer-specific exclusions without storing them in the scaffold. The root
+commit gate audits the staged templates. Pattern checks support human review;
+they do not prove that every domain-specific assumption has been removed.
+Use `bash scripts/check-index-clean.sh <pathspec>...` before execution-based
+commit checks. It rejects unstaged or untracked inputs without changing files.
+Ignored dependencies are outside this check; install them from lockfiles.

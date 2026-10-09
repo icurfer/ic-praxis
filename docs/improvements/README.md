@@ -95,3 +95,15 @@ every project. v0.2.0's answer is **core (always) + opt-in modules (selective)**
 `monorepo`, `multi-session`, `deploy-manifest` — chosen via `install.sh` flags or
 `/praxis-init` detect-and-ask. See the "Selective application — modules" section
 in the README.
+
+## Follow-up in v0.8.0
+
+The CI adoption decision in `applied/ci-half-of-the-gate.md` is revised: new
+installs keep CI off, with explicit `--ci` opt-in, to support beginners starting
+locally. Existing workflows are preserved. The original retro remains unchanged.
+The default task harness adds local task/check/validate/status commands while
+retaining the existing commit gate.
+
+- 2026-10-09: v0.8.1 hardens process cleanup, validation status exit codes, staged semver progression and first-push CI baseline handling.
+
+- v0.8.2: generic distribution boundary auditing and explicit index/worktree input agreement for execution-based commit checks.

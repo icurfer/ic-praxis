@@ -52,6 +52,13 @@ changed, add **one `CHANGELOG` line** and tick `backlog.md`. Done.
 - Do not micro-bump-spam deploys — batch related changes into one version bump. (why: deploy churn and keepalive thrash.)
 - {{add your own hard-won rules}}
 
+## Task harness
+
+`harness/` is installed by default. Use the `praxis-task` procedure to create a
+task, check prerequisites, run project checks and report status. Configure real
+checks during adoption; an empty check list never counts as passed. Revalidate
+after code changes. CI stays off unless explicitly requested.
+
 ## Automated gate
 The mechanically-checkable rules above are enforced at commit time by
 `.githooks/pre-commit` → `scripts/check-conventions.sh`. Enable once per clone:

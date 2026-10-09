@@ -13,6 +13,18 @@ $ARGUMENTS
 
 Do this:
 
+The default install includes `harness/`. Read `harness/README.md`, check Node.js
+18+ availability, and configure `harness/config/project.json` from actual project
+test/build commands. Keep checks empty and explain the blocker if no meaningful
+verification exists yet. Introduce natural-language task/status/verification
+requests via the canonical `praxis-task` procedure; users need not learn the CLI.
+
+Keep praxis CI off by default: do not create or enable a CI workflow unless
+the user explicitly requests it. Local commit checks work without CI. Explain
+CI as checks run on the hosting service after a push or pull request, if needed.
+To opt in later, re-run the installer with `--ci` (without `--force`). Preserve
+existing workflows; if praxis CI already exists, explain that it remains active.
+
 1. **Inspect the repo** — language, framework, how it builds/deploys, how many
    deployable units, and what CI actually triggers on (`.github/workflows`,
    `Dockerfile`, `package.json`, `helm/`, `k8s/`, `docker-compose*.yml`, etc.).

@@ -10,7 +10,7 @@
 # HOW IT WORKS
 #   check-conventions.sh judges the STAGED blob (`git show ":$f"`) — that is the
 #   whole point: it checks what actually gets committed. CI has nothing staged,
-#   so we stage the entire change set with `git reset --soft <base>` and run the
+#   so we stage the entire change set with `git reset --soft <base> (an empty tree gets a synthetic commit)` and run the
 #   script UNMODIFIED. Same code path as the hook, no CI-only branch to rot.
 #
 #   Consequence (intended): the hook judges one commit, this judges the whole
@@ -51,7 +51,14 @@ jobs:
           echo "base = $base"
 
       - name: Stage the whole change set
-        run: git reset --soft "${{ steps.base.outputs.sha }}"
+        run: |
+          set -euo pipefail
+          # Keep HEAD at the base for the staged gate's version comparison.
+          base="${{ steps.base.outputs.sha }}"
+          if [ "$(git cat-file -t "$base")" = tree ]; then
+            base="$(git -c user.name=Praxis -c user.email=praxis@example.invalid commit-tree "$base" -m 'Empty CI baseline')"
+          fi
+          git reset --soft "$base"
 
       - name: Run the praxis gate
         run: bash scripts/check-conventions.sh

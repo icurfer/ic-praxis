@@ -31,7 +31,7 @@ A five-axis scaffold, dropped into any repo:
 |---|---|---|
 | **1. Constitution** | `CLAUDE.md` + `AGENTS.md` | Rules the agent reads every session: work order, delegated responsibilities, hard "Do NOT"s (each with its *why*). One shared rule block, mirrored in both files and **drift-gated** — Claude Code and Codex read the same law. |
 | **2. Four-stage docs** | `docs/` | Change freezes into a spec → scope → backlog → done trail before it becomes code. |
-| **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. **Runs twice** — locally at commit time, and again in CI so a clone without the hook (or a `--no-verify`) can't slip past. |
+| **3. The praxis gate** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | Blocks commits that violate mechanically-checkable rules: deploy-trigger not bumped, malformed version file, secret/taboo patterns. **Local checks by default** after enabling the hook. The CI workflow is installed only with `--ci`; it repeats the checks on the hosting service after a push or pull request. |
 | **4. Shared memory** | `.claude/memory/` | Team knowledge, one fact per file, indexed in `MEMORY.md` and **read on demand** — git-versioned, so lessons survive context resets and travel by PR. Personal notes stay out (`user-*.md` / `*.local.md` are git-ignored). Ships a few universal starter rules. |
 | **5. Verify skill** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | Reusable end-to-end checks instead of throwaway scripts (the procedure is the skill; the runnable helpers live in `scripts/`). Claude Code and Codex each get a native entrypoint to one canonical procedure. |
 
@@ -164,6 +164,12 @@ making a deliberately-bad commit and showing it blocked.**
 > local copy, clone it **outside** your project and run
 > `/path/to/ic-praxis/install.sh /path/to/your/project`.
 
+**CI is off by default.** Installation does not create the praxis CI workflow,
+including when using `--force`. Local commit checks work without CI. To enable
+CI later, ask your agent to enable praxis CI, or re-run the installer with
+`--ci` without `--force`. Existing workflows are preserved; reinstalling does
+not turn off CI that was already configured.
+
 **B. Raw installer (scripted / CI use)**
 
 ```bash
@@ -172,6 +178,7 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 #
 # flags: --multi-session (hub + parallel sessions)  --no-version (per-area repos)
 #        --no-docs (already have a doc system)       --force (overwrite)
+#        --ci (opt in to CI checks; off by default)
 # passing flags through a pipe needs `bash -s --`:
 #   curl -fsSL .../install.sh | bash -s -- --multi-session
 ```
@@ -399,6 +406,53 @@ bash scripts/praxis-review.sh   # structural sprawl: orphan/dangling memory, gro
 The result is a system that **starts tiny, grows only what your incidents earn, and
 curates itself** — the opposite of shipping someone else's mega-framework on day one.
 
+## Built-in task harness
+
+Every install now includes `harness/`: a local CLI for task creation, prerequisite
+checks, project validation and status. **CI stays off by default.** The harness
+requires Node.js 18+ and Git, with no npm dependencies; existing Bash commit gates
+remain usable without Node.
+
+You can ask your agent **“start this task”**, **“validate my changes”**, or
+**“show task status”**. Claude Code uses `/praxis-task`; Codex uses `$praxis-task`.
+During `/praxis-init`, the agent configures real test/build commands in
+`harness/config/project.json`. An empty check list never passes validation.
+
+```bash
+node harness/bin/praxis.mjs task init fix-login --title "Fix login" --size small
+node harness/bin/praxis.mjs task check fix-login
+node harness/bin/praxis.mjs task validate fix-login
+node harness/bin/praxis.mjs task status fix-login
+```
+
+Big changes (the default size) require nonempty plan documents via `--plan`.
+Validation reuses the staged commit gate and runs configured checks. It records
+results locally in ignored `harness/.state/`; changes to HEAD, the index or
+tracked/nonignored files invalidate a prior pass. Plan quality, ignored build
+outputs and external state still require judgment. Commands do not automatically
+stage, commit, push, deploy or enable CI. See the [harness guide](templates/harness/README.md)
+for configuration, limitations and tests.
+
 ## License
 
 Apache-2.0
+
+
+### Harness hardening (0.8.1)
+
+Validation status exits nonzero for stale, failed or missing evidence. Staged
+semantic versions must increase relative to HEAD. First-push CI uses a valid
+empty baseline commit. On POSIX, timeout and interruption stop the started
+process group; Windows stops the direct process. CI remains opt-in.
+
+
+### Distribution boundaries and execution inputs (0.8.2)
+
+Audit shipped templates with `node scripts/check-portability.mjs templates`.
+An optional external JSON policy (`{"deny":["private-literal"]}`) can add
+consumer-specific exclusions without storing them in the scaffold. The root
+commit gate audits the staged templates. Pattern checks support human review;
+they do not prove that every domain-specific assumption has been removed.
+Use `bash scripts/check-index-clean.sh <pathspec>...` before execution-based
+commit checks. It rejects unstaged or untracked inputs without changing files.
+Ignored dependencies are outside this check; install them from lockfiles.

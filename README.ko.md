@@ -35,7 +35,7 @@
 |---|---|---|
 | **1. 헌법(Constitution)** | `CLAUDE.md` + `AGENTS.md` | 에이전트가 매 세션 읽는 규칙: 작업 순서, 위임 책임, 강한 "하지 말 것"(각각 *왜*를 명시). 공유 규칙 블록 하나가 두 파일에 미러링되고 **drift가 게이트로 차단**된다 — Claude Code와 Codex가 같은 법을 읽는다. |
 | **2. 4단 문서 체계** | `docs/` | 변경이 코드가 되기 전에 spec → scope → backlog → done 흐름으로 문서화된다. |
-| **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. **두 번 돈다** — 커밋 시점에 로컬에서, 그리고 CI에서 한 번 더. 훅이 안 걸린 clone 이나 `--no-verify` 가 통과하지 못한다. |
+| **3. praxis 게이트** ⭐ | `scripts/check-conventions.sh` + `.githooks/pre-commit` + `.github/workflows/praxis-gate.yml` | 기계로 검증 가능한 규칙 위반 커밋을 차단: 배포 트리거 미bump, 잘못된 version 파일 형식, 시크릿/금지 패턴. **기본은 로컬 검사** — 훅 활성화 후 커밋할 때 실행한다. CI 워크플로는 `--ci`를 지정한 경우에만 설치하며, push나 PR 이후 저장소 호스팅 서비스에서 같은 검사를 실행한다. |
 | **4. 공유 메모리** | `.claude/memory/` | 파일 1개=사실 1개로 인덱싱된 **팀 지식**. `MEMORY.md` 색인을 통해 **필요할 때 읽는다**. git으로 버전 관리돼 컨텍스트가 초기화돼도 교훈이 살아남고 PR로 공유된다. 개인 메모는 제외(`user-*.md` · `*.local.md` 는 git-ignore). 범용 스타터 규칙 몇 개 포함. |
 | **5. 검증 스킬** | `.claude/skills/verify-app/` + `.agents/skills/verify-app/` | 일회성 스크립트 대신 재사용 가능한 end-to-end 검증(절차는 스킬에, 실행 스크립트는 `scripts/` 에). Claude Code와 Codex가 하나의 정본 절차로 이어지는 각자의 네이티브 진입점을 가진다. |
 
@@ -164,6 +164,12 @@ $praxis-init  <프로젝트를 한 줄로 설명>
 > `ic-praxis/` 폴더(자체 `.git` 포함)가 남아 오염된다. 로컬 사본을 두고 싶으면 프로젝트
 > **바깥**에 clone한 뒤 `/path/to/ic-praxis/install.sh /path/to/your/project` 로 실행한다.
 
+**CI는 기본으로 꺼져 있습니다.** 설치 시 praxis CI 워크플로를 생성하지 않으며,
+`--force`를 사용해도 동일합니다. 내 컴퓨터에서 하는 커밋 검사는 CI 없이 사용할 수 있습니다.
+나중에 필요하면 에이전트에게 “praxis CI 켜줘”라고 요청하거나, `--force` 없이
+`--ci` 옵션으로 설치 스크립트를 다시 실행하세요. 기존 워크플로는 보존하므로,
+이미 설정된 CI가 재설치로 꺼지지는 않습니다.
+
 **B. 원시 설치 스크립트 (스크립트/CI용)**
 
 ```bash
@@ -172,6 +178,7 @@ curl -fsSL https://raw.githubusercontent.com/icurfer/ic-praxis/main/install.sh |
 #
 # 플래그: --multi-session (허브 + 병렬 세션)  --no-version (영역별 version 레포)
 #         --no-docs (이미 문서 체계 있음)       --force (덮어쓰기)
+#         --ci (CI 검사 선택 활성화; 기본은 꺼짐)
 # 파이프로 플래그를 넘길 때는 `bash -s --` 가 필요하다:
 #   curl -fsSL .../install.sh | bash -s -- --multi-session
 ```
@@ -388,6 +395,51 @@ bash scripts/praxis-review.sh   # 구조적 sprawl: 고아/dangling 메모리, �
 결과는 **작게 시작해, 당신의 사고가 번 것만 자라고, 스스로 선별되는** 체계다 —
 첫날부터 남의 메가 프레임워크를 통째로 짊어지는 것과 정반대다.
 
+## 기본 작업 하네스
+
+설치하면 `harness/`가 기본 생성됩니다. 작업 생성, 시작 조건 검사, 프로젝트 검증,
+상태 조회를 실행하는 로컬 도구입니다. **CI는 기본으로 꺼져 있습니다.** 하네스는
+Node.js 18+와 Git이 필요하며 npm 패키지 설치는 필요 없습니다. Node가 없어도 기존
+Bash 커밋 검사는 사용할 수 있습니다.
+
+에이전트에게 **“이 작업 시작해줘”**, **“변경 사항 검증해줘”**, **“현재 상태 알려줘”**라고
+요청하면 됩니다. Claude Code에서는 `/praxis-task`, Codex에서는 `$praxis-task`로도
+호출합니다. `/praxis-init` 과정에서 에이전트가 실제 테스트·빌드 명령을
+`harness/config/project.json`에 설정합니다. 검사 명령이 없으면 검증을 통과시키지 않습니다.
+
+```bash
+node harness/bin/praxis.mjs task init fix-login --title "로그인 수정" --size small
+node harness/bin/praxis.mjs task check fix-login
+node harness/bin/praxis.mjs task validate fix-login
+node harness/bin/praxis.mjs task status fix-login
+```
+
+기본 변경 크기는 `big`이며, 큰 변경에는 `--plan`으로 내용이 있는 계획 문서를 지정해야
+합니다. 검증은 기존 staged 커밋 게이트와 프로젝트 검사 명령을 실행합니다. 결과는 Git이
+무시하는 `harness/.state/`에 로컬로 기록하며, HEAD·스테이징 상태·추적 파일 또는 무시되지
+않은 파일이 바뀌면 이전 통과 결과는 재검증 대상으로 표시합니다. 계획 내용의 타당성,
+무시된 빌드 산출물과 외부 환경은 별도 판단이 필요합니다. 자동으로 stage·commit·push·배포하거나
+CI를 켜지 않습니다. 설정·제약·테스트는 [하네스 안내](templates/harness/README.md)를 참고하세요.
+
 ## 라이선스
 
 Apache-2.0
+
+
+### 하네스 검증 보완 (0.8.1)
+
+검증 증거가 없거나 실패·재검증 상태이면 종료 코드 1을 반환합니다.
+스테이징된 의미적 버전은 HEAD보다 증가해야 합니다. 첫 push CI는 빈 기준
+커밋을 사용합니다. 시간 초과·중단 시 POSIX에서는 실행한 프로세스 그룹을,
+Windows에서는 직접 실행한 프로세스를 종료합니다. CI는 선택 설치입니다.
+
+
+### 배포물 경계와 검사 입력 (0.8.2)
+
+`node scripts/check-portability.mjs templates`로 배포물을 검사합니다.
+외부 JSON 정책의 deny 목록으로 소비자별 금칙어를 추가할 수 있습니다.
+소비자 정책은 스캐폴드에 넣지 않습니다. 루트 커밋 게이트는 staged 배포물을
+검사합니다. 패턴 검사는 사람의 검토를 보완하며 모든 업무 종속성을 판별하지는 않습니다.
+실행형 커밋 검사 앞에 `bash scripts/check-index-clean.sh <pathspec>...`를
+호출하면 미스테이징·미추적 입력을 차단합니다. 파일은 수정하지 않습니다.
+Git이 무시하는 의존성은 범위 밖이며 lockfile로 설치합니다.

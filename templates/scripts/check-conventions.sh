@@ -167,6 +167,14 @@ for vfile in "${AREA_VFILE[@]}"; do
     printf '%s    → printf %%s "<version>" > %s   (then git add it)%s\n' "$DIM" "$vfile" "$RST" >&2
   else
     ok "'$vfile' format ok ($first)"
+    if [ "${1:-}" != "--all" ] && printf '%s\n' "$PRESENT_LIST" | grep -Fxq -e "$vfile"; then
+      previous="$(git show "HEAD:$vfile" 2>/dev/null || true)"
+      if [[ "$first" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$previous" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        if ! awk -v old="${previous#v}" -v new="${first#v}" 'BEGIN { split(old,a,"."); split(new,b,"."); for(i=1;i<=3;i++){if(b[i]+0>a[i]+0)exit 0;if(b[i]+0<a[i]+0)exit 1}exit 1 }'; then
+          err "'$vfile' must increase from HEAD ($previous -> $first)."
+        fi
+      fi
+    fi
   fi
 done
 

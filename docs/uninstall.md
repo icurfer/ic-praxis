@@ -77,7 +77,17 @@ Keep `docs/CHANGELOG.md` unless you have another changelog. Remove the
 **work order** section from the constitution, or it describes folders that no
 longer exist.
 
-## 5. Leftovers to check
+## 5. Remove the task harness (optional)
+
+Remove `harness/` and the `praxis-task` command/skill only if you no longer need
+task tracking. Back up any wanted local records under `harness/.state/` first:
+these are ignored and Git cannot restore them. Remove the `/harness/.state/`
+ignore entry and the Task harness section from both constitution files together.
+The harness does not install global packages or change personal directories.
+If you opted into praxis CI separately, remove `.github/workflows/praxis-gate.yml`
+to stop that workflow; removing the harness alone does not disable it.
+
+## 6. Leftovers to check
 
 ```bash
 grep -rn "praxis\|\.claude/\|\.agents/" --exclude-dir=.git .
