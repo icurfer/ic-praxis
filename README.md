@@ -406,6 +406,43 @@ bash scripts/praxis-review.sh   # structural sprawl: orphan/dangling memory, gro
 The result is a system that **starts tiny, grows only what your incidents earn, and
 curates itself** — the opposite of shipping someone else's mega-framework on day one.
 
+## Personal or project-shared installation
+
+Adoption asks how you want to use the scaffold: **personal** or **project-shared**.
+If you tell the AI to “apply it appropriately” or use its judgment, the default is
+**personal**, announced without an unnecessary extra question. An explicit
+existing choice takes precedence. This is separate from the harness type choice.
+
+| Scope | Harness and development records | Public user guides / changelogs |
+|---|---|---|
+| Personal (default) | Local only: `harness/`, `docs/requirements/`, `spec/`, `scope/`, `deferred/`, `done/` | May be committed |
+| Project-shared (explicit opt-in) | Reviewed tools and documents may be committed | May be committed |
+
+```bash
+bash install.sh /path/to/project          # personal by default; preserve existing scope
+bash install.sh --shared /path/to/project # explicit shared selection
+# In an installed project, after reviewing the change with the user:
+bash scripts/configure-sharing.sh personal
+bash scripts/configure-sharing.sh shared
+```
+
+Personal exclusions use `.git/info/exclude` without adding team-wide exclusions
+to `.gitignore`. Non-Git targets and worktrees with external Git metadata use a
+managed `.gitignore` fallback instead; re-run the helper after `git init` to migrate
+it. Other ignore rules are preserved. The scope lives in `harness/config/sharing`.
+
+A local commit check blocks staged personal paths and runtime records, including
+force-adds; shared files need the shared declaration staged too. Existing tracked
+files are reported, not automatically untracked or erased from history. Ordinary
+“push” requests do not approve publishing private records. Review actual contents
+before shared selection; for a few public results, export a curated summary.
+The hook is bypassable and does not prove human approval. Existing custom hooks
+must integrate `scripts/check-sharing.sh`. CI remains off by default.
+
+Agent rules, shared memories and other scripts retain their existing publication
+policies; this is scoped exclusion, not a private copy of the entire repository.
+In ic-praxis itself, `templates/` stays versioned as the distributable product.
+
 ## Harness type selection
 
 When you ask an agent to apply the harness, `/praxis-init` (Codex: `$praxis-init`)

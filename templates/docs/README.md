@@ -30,3 +30,12 @@ This is not documentation theater. The heart of the system is the **retro loop**
 when something breaks, write down *why* as a rule here — and if it's mechanically
 checkable, harden it into a gate in `scripts/check-conventions.sh` so it can
 never slip back. Rules that rely on human memory eventually break again.
+
+## Publication
+
+`requirements/`, `spec/`, `scope/`, `deferred/` and `done/` are local by default
+under personal publication scope. Creating or completing these records does not
+mean committing them. User guides and public changelogs remain publishable.
+Choose project-shared scope explicitly after reviewing the actual contents;
+otherwise publish only a curated summary outside the private directories.
+See `../harness/README.md` and `scripts/configure-sharing.sh` at the repository root.

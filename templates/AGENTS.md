@@ -49,6 +49,19 @@ changed, add **one `CHANGELOG` line** and tick `backlog.md`. Done.
 - Do not micro-bump-spam deploys — batch related changes into one version bump. (why: deploy churn and keepalive thrash.)
 - {{add your own hard-won rules}}
 
+## Publication scope
+
+At adoption, ask personal or project-shared, independently of harness type.
+If the user delegates with "apply appropriately" or equivalent, default to
+personal; preserve an explicit existing choice. `harness/config/sharing` records
+personal/shared. Personal keeps `harness/` and `docs/requirements`, `spec`, `scope`,
+`deferred`, `done` local. User guides and public changelogs may be committed.
+Use `scripts/configure-sharing.sh`; never force-add private files or interpret a
+generic push request as approval to publish them. Review the actual contents
+before a shared transition. No automatic untracking or history rewriting.
+The commit gate checks this scope; personal records are not part of the
+code-plus-docs publication cycle. Shared scope still excludes runtime state.
+
 ## Task harness
 
 `harness/` is installed by default, initially with no type selected. Before

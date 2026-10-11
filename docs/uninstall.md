@@ -94,3 +94,12 @@ grep -rn "praxis\|\.claude/\|\.agents/" --exclude-dir=.git .
 git status          # nothing outside the repo should appear — by design
 ls -l ~/.claude/projects/*/memory 2>/dev/null | grep -- '->'   # no link into this repo
 ```
+
+## Publication-scope cleanup
+
+If removing personal exclusions, delete only the `praxis:personal:begin/end`
+managed block from `.git/info/exclude` (or the `.gitignore` fallback). This makes
+previously local files eligible for staging; review or relocate private records
+first. `harness/config/sharing` records the scope. If keeping a customized gate,
+remove its call to `scripts/check-sharing.sh` only when dropping that policy.
+Removing exclusions neither deletes files nor removes already published history.

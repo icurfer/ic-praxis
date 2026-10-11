@@ -6,7 +6,14 @@ Use this procedure when the user asks to start a task, check progress or verify
 work. Explain the result in the user's language; users need not learn commands.
 The executable lives in `harness/`, shared by Claude Code and Codex.
 
-First read `harness/config/profile.json`. If the type is unset, follow the type
+Read `harness/config/sharing` first (missing means personal). Respect the
+publication scope: personal harness/development records remain local, including
+when asked to commit or push normal product changes. Do not force-add them.
+Sharing requires explicit user choice after reviewing what will be published;
+follow the publication step in `praxis-init`. Do not treat development completion
+as a reason to switch scope. Public guides/curated summaries can be committed.
+
+Then read `harness/config/profile.json`. If the type is unset, follow the type
 selection step in `.claude/commands/praxis-init.md` before creating any task.
 If it is `infrastructure`, read `harness/profiles/infrastructure/README.md`,
 explain pending reference-project integration and stop; do not run development

@@ -21,6 +21,8 @@
 # the modules your project shape needs. The flags below are for scripted/CI use.
 #
 # Flags:
+#   --personal         local-only harness/development records (default)
+#   --shared           explicitly share harness/development records
 #   --ci               install the optional CI workflow (off by default)
 #   --force            overwrite existing files (default: never overwrite)
 #   --no-version       don't seed a root 'version' file (per-area version repos)
@@ -37,6 +39,7 @@ BRANCH="main"
 TARBALL="https://codeload.github.com/icurfer/ic-praxis/tar.gz/refs/heads/${BRANCH}"
 REPO_URL="https://github.com/icurfer/ic-praxis.git"   # git fallback only
 FORCE=0; NO_VERSION=0; NO_DOCS=0; MULTI_SESSION=0; WITH_CI=0
+SHARING=auto
 TARGET="."
 for a in "$@"; do
   case "$a" in
@@ -45,6 +48,8 @@ for a in "$@"; do
     --no-docs) NO_DOCS=1 ;;
     --multi-session) MULTI_SESSION=1 ;;
     --ci) WITH_CI=1 ;;
+    --personal) SHARING=personal ;;
+    --shared) SHARING=shared ;;
     *) TARGET="$a" ;;
   esac
 done
@@ -156,6 +161,9 @@ if [ -f "$GI" ] && [ -f "$SRC/.gitignore" ]; then
   done < "$SRC/.gitignore"
 fi
 
+# Configure scope from the shipped helper; preserve the existing selection on reruns.
+bash "$SRC/scripts/configure-sharing.sh" "$SHARING" "$TARGET"
+
 # ic-praxis <= v0.5.3 shipped scripts/setup-claude-memory.sh, which symlinked the
 # user's PERSONAL memory directory into the repo. v0.6.0 dropped it: on a shared
 # repo it leaks personal notes into the team tree, and the encoded path depends on
@@ -200,7 +208,7 @@ fi
 echo "  harness/: choose development or infrastructure during /praxis-init (Node.js 18+)."
 echo "  No type is selected on a fresh install. Infrastructure is a pending integration scaffold."
 echo "Next (from the project root):"
-echo "  1) choose the harness type with your agent (development / infrastructure)."
+echo "  1) choose publication scope (personal default / shared) and harness type with your agent."
 echo "  2) in Claude Code, customize:     /praxis-init <one line about your project>"
 echo "     (recommended — inspects the repo, tunes the gate & modules, proves it blocks a bad commit)"
 echo "     in Codex, customize:            \$praxis-init <one line about your project>"

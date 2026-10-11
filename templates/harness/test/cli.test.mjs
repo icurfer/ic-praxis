@@ -24,6 +24,7 @@ function fixture(t) {
   fs.writeFileSync(path.join(root, 'harness/config/profile.json'), JSON.stringify({ schemaVersion: 1, profile: null }));
   cli(['profile', 'select', 'development']);
   fs.writeFileSync(path.join(root, 'version'), '0.0.0');
+  fs.writeFileSync(path.join(root, 'harness/config/sharing'), 'shared\n');
   git('add', '.'); git('-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'fixture');
   const config = checks => fs.writeFileSync(path.join(root, 'harness/config/project.json'), JSON.stringify({ schemaVersion: 1, checks }));
   const check = code => ({ name: 'test', command: [process.execPath, '-e', code], timeoutSeconds: 5 });

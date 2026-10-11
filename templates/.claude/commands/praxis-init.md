@@ -13,7 +13,32 @@ $ARGUMENTS
 
 Do this:
 
-**Select the harness type FIRST.** Read `harness/config/profile.json` and
+**Choose publication scope before customization.** This is separate from harness
+type. Ask: "개인용으로 로컬에서만 사용할까요, 프로젝트 공통 도구로 공유할까요?"
+Explain that personal excludes `harness/` and `docs/requirements`, `spec`, `scope`,
+`deferred`, `done`; user guides and public changelogs may be committed.
+If the user says "적절히 적용해줘" / "use your judgment" or delegates AI setup
+without specifying publication, use **personal** and state that choice instead
+of blocking on a question. An explicit previous choice takes precedence; preserve
+an existing scope on routine re-adoption. With no answer and no delegation, keep
+the safe personal default and leave a shared transition pending.
+
+Run `bash scripts/configure-sharing.sh personal` or, only after explicit shared
+selection, `bash scripts/configure-sharing.sh shared`. The setting is
+`harness/config/sharing`. Normal installs already establish personal protection;
+`--shared` is explicit opt-in. Ordinary Git clones use `.git/info/exclude` for
+personal paths. Non-Git targets or external worktree metadata use a managed
+`.gitignore` fallback; never write outside the target. Re-running the helper after
+`git init` moves only its managed block to the local exclude file.
+Existing tracked files are reported, not automatically untracked or removed from
+history. Show the actual paths/content before requesting publication; a generic
+"push" does not approve publishing personal records. Do not use `git add -f` or
+`--no-verify` to bypass this policy. For selected public results, export a reviewed
+summary to public docs instead of publishing the private record tree. Shared scope
+makes the whole protected set eligible for version control; explain that before
+switching. It neither stages files nor authorizes a push. State and logs stay local.
+
+**Then select the harness type.** Read `harness/config/profile.json` and
 `harness/README.md`. If no type is selected, ask: "개발용(코드·테스트·빌드)과
 인프라용(서버·클러스터 운영, 현재 연동 준비) 중 어떤 하네스를 적용할까요?"
 Honor an explicit choice already made by the user; do not infer it from files or
@@ -112,7 +137,9 @@ existing workflows; if praxis CI already exists, explain that it remains active.
    replace anything under the user's personal `~/.claude/`, and tell them
    personal notes go in `user-*.md` / `*.local.md` (git-ignored).
 
-7. **Enable and PROVE the gate**: run `bash scripts/install-hooks.sh`, then make
+7. **Enable and PROVE the gate** (including `scripts/check-sharing.sh`; if an
+   existing gate/hook was preserved by installation, integrate the sharing check
+   without replacing its other checks): run `bash scripts/install-hooks.sh`, then make
    a deliberately-violating staged change (deploy code without a version bump)
    and show the commit is BLOCKED. Then revert the dummy change. If both
    constitution files are in use, also prove Gate E once: edit the shared block

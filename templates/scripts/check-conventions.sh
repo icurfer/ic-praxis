@@ -25,6 +25,9 @@ set -euo pipefail
 # pathspecs, and AREA regexes agree no matter where the script was invoked from.
 cd "$(git rev-parse --show-toplevel)"
 
+# Consumer publication policy; the distribution repository uses its own gate.
+bash scripts/check-sharing.sh
+
 # ── Config (tune these for your project) ────────────────────────────────────
 # AREAS — one entry per deployable unit, expressed as two PARALLEL arrays:
 # AREA_CODE_RE[i] is the code paths that "must be deployed"; AREA_VFILE[i] is the

@@ -8,6 +8,45 @@ local commit hooks remain usable without Node. No npm install is required.
 있습니다. 처음에는 에이전트가 프로젝트에 맞는 검사 명령을 설정합니다.
 검사가 미설정된 상태는 통과로 처리하지 않습니다. CI는 켜지지 않습니다.
 
+## Publication scope / 개인용과 공통용
+
+At adoption, the agent asks whether this is **personal** or **project-shared**.
+When you say “적절히 적용해줘” / “use your judgment”, it defaults to personal and
+states that choice. This choice is independent of development/infrastructure.
+Normal installs default to personal immediately, even before the conversation.
+
+- **personal:** `harness/` and `docs/requirements/`, `docs/spec/`, `docs/scope/`,
+  `docs/deferred/`, `docs/done/` remain local. Public guides and changelogs can ship.
+- **shared:** those tools and documents can be committed after review; runtime
+  state and personal settings stay excluded. Shared is not permission to push.
+
+```bash
+bash scripts/configure-sharing.sh personal
+# Only after explicit user selection and review:
+bash scripts/configure-sharing.sh shared
+```
+
+Selection is stored in `harness/config/sharing`. Ordinary installs preserve it;
+installer flags `--personal` / `--shared` explicitly set it. The managed local
+exclude block goes in `.git/info/exclude`. For non-Git targets or linked worktrees
+with external metadata, a managed `.gitignore` block is used instead; no outside
+metadata is written. Run the helper again after `git init` to migrate that block.
+Other Git settings and ignore rules are preserved. Unrelated rules may still
+exclude a file after shared selection; inspect them instead of force-adding.
+
+The installed commit gate blocks staged private paths (including force-added or
+already tracked files), and always blocks runtime records. When sharing protected
+paths, stage the reviewed `harness/config/sharing` declaration with them. A generic
+“push” request never changes the scope. Existing tracked files and remote history
+are not automatically removed. The hook is a local safeguard, not a human-approval
+verifier or an unbypassable server control. Existing adopted gates must incorporate
+`scripts/check-sharing.sh`; the installer does not overwrite them by default.
+
+This scope covers the paths listed above, not every scaffold file: agent rules,
+shared memories and scripts retain their existing policies. Do not put personal
+material in those versioned files. Export a reviewed summary into public docs when
+only selected results should be published. Keep the full private record local.
+
 ## Choose the type first / 종류 선택
 
 Fresh installs have `profile: null` in `config/profile.json`. When you ask the
@@ -102,7 +141,7 @@ contains results, timestamp, fingerprint and pass/fail. `project.json` also uses
 format version 1; fields are validated at runtime. There is no external service.
 
 A passed record becomes stale when HEAD, the index, or tracked/nonignored files
-change. Config, gate and referenced plans are included even if ignored. Ignored
+change. Local harness code is fingerprinted even in personal mode. Config, gate and referenced plans are included even if ignored. Ignored
 build outputs and external state/dependencies are not fingerprinted: rerun checks
 when those change. Submodules are currently unsupported and cause validation to
 fail. Validation that changes fingerprinted files requires a rerun. A lock prevents

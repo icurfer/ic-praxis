@@ -92,8 +92,20 @@ function snapshot(task) {
     else if (stat.isFile()) digest.update(fs.readFileSync(filename));
     else fail(`Cannot fingerprint ${name}; submodules/directories need a separate validation workflow.`);
   }
+  // Personal installs ignore harness/. Still invalidate evidence when tools/config change.
+  function includeHarness(relative) {
+    for (const entry of fs.readdirSync(local(relative), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const name = `${relative}/${entry.name}`;
+      if (name === state || name.endsWith('/profile.json.lock')) continue;
+      const filename = local(name);
+      if (entry.isDirectory()) includeHarness(name);
+      else if (entry.isFile()) { digest.update(name); digest.update(fs.readFileSync(filename)); }
+      else fail(`Unsupported harness input: ${name}`);
+    }
+  }
+  includeHarness('harness');
   // These may be ignored by the target repo; still include their current contents.
-  for (const name of ['harness/config/profile.json', 'harness/config/project.json', 'scripts/check-conventions.sh', ...task.plan]) {
+  for (const name of ['harness/config/profile.json', 'harness/config/project.json', 'scripts/check-conventions.sh', 'scripts/check-sharing.sh', ...task.plan]) {
     digest.update(name); digest.update(fs.readFileSync(local(name)));
   }
   return digest.digest('hex');

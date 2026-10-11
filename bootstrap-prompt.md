@@ -5,6 +5,23 @@ root of the target project. It builds the same scaffold from scratch.
 
 ---
 
+First ask whether adoption is personal or project-shared. If the user delegates
+with "apply appropriately" / "use your judgment", default to personal and state
+the choice; honor existing explicit choices. This is independent of harness type.
+Default installation protects `harness/` and `docs/requirements`, `spec`, `scope`,
+`deferred`, `done` locally, leaving public guides/changelogs eligible for commit.
+Use a managed `.git/info/exclude` block, or a managed `.gitignore` fallback when
+Git is absent or metadata is outside the target; never write outside the target.
+Provide `scripts/configure-sharing.sh personal|shared` and persist the selection
+in `harness/config/sharing`. Preserve unrelated exclusions and existing choices.
+Add `scripts/check-sharing.sh` to the consumer commit gate: reject staged private
+files, require a staged shared declaration for shared protected paths, and always
+reject runtime state. Do not auto-untrack files or rewrite history. Explain that
+local hooks are bypassable and cannot prove human approval. A generic push request
+is not publication consent; review actual contents before opting into shared.
+Fingerprint ignored harness code/config too, so local tools changing stale the
+validation result. Other scaffold files retain their existing policies.
+
 You are setting up a "praxis" discipline system in this project — where
 retrospectives become machine-enforced pre-commit gates so mistakes can't ship
 twice. Create these five axes, adapting each to THIS repo (inspect the stack,
