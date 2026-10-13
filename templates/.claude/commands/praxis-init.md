@@ -40,7 +40,7 @@ switching. It neither stages files nor authorizes a push. State and logs stay lo
 
 **Then select the harness type.** Read `harness/config/profile.json` and
 `harness/README.md`. If no type is selected, ask: "개발용(코드·테스트·빌드)과
-인프라용(서버·클러스터 운영, 현재 연동 준비) 중 어떤 하네스를 적용할까요?"
+인프라용(운영 태스크·범위·근거·인계 관리) 중 어떤 하네스를 적용할까요?"
 Honor an explicit choice already made by the user; do not infer it from files or
 silently default to development. Without an answer, leave the selection unset.
 Check Node.js 18+ is available and run
@@ -48,13 +48,20 @@ Check Node.js 18+ is available and run
 Preserve an existing selection; a request to change it needs a migration plan
 that preserves configuration and task records, not a forced reinstall.
 
-- **Infrastructure:** read `harness/profiles/infrastructure/README.md`. Record the
-  user's reference project in `harness/config/infrastructure.json` if supplied;
-  otherwise leave it null and explain that it can be provided later. This is a
-  placeholder, not an implemented operations harness. Stop this adoption flow
-  after recording the choice: do not apply the development sizing/doc/version
-  workflow below, configure development checks, or activate hooks/CI for it.
-  Existing project rules and operational workflows remain in force.
+- **Infrastructure:** read `harness/profiles/infrastructure/README.md` and the
+  existing operations rules. Configure the user's authoritative task registry,
+  managed scope and repository-local workflow in `config/infrastructure.json`;
+  preserve an optional supplied reference project. No default vendor, accounts or
+  commands. Reuse an existing connector and credential store; write only a
+  sanitized complete snapshot to ignored `.state/` after a real query. If registry
+  information is missing, leave setup pending instead of inventing it. Preserve
+  existing records; review/merge updated code, procedures and config on upgrade
+  (ordinary reinstall skips existing files). Run `profile
+  status`, then `task list`/`reconcile` and report gaps, not automatic bulk changes.
+  Readiness is record checking, not deployment authorization. Follow the guide
+  for publication guard integration; preserve existing hooks. Stop before the
+  development sizing/doc/version flow below; do not configure development checks
+  or enable CI. Introduce natural-language requests via `praxis-task`.
 - **Development:** read `harness/profiles/development/README.md`, configure real
   test/build commands in `harness/config/project.json`, then follow the adoption
   steps below. Keep checks empty and explain the blocker if no meaningful checks

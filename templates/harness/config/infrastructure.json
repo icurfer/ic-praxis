@@ -1,5 +1,12 @@
 {
   "schemaVersion": 1,
   "referenceProject": null,
-  "notes": ""
+  "notes": "",
+  "taskRegistry": {
+    "name": null,
+    "scope": null,
+    "workflow": null,
+    "snapshot": "harness/.state/registry.json",
+    "maxAgeHours": 24
+  }
 }

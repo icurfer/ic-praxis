@@ -206,7 +206,7 @@ if [ "$WITH_CI" -eq 0 ]; then
   fi
 fi
 echo "  harness/: choose development or infrastructure during /praxis-init (Node.js 18+)."
-echo "  No type is selected on a fresh install. Infrastructure is a pending integration scaffold."
+echo "  No type is selected on a fresh install. Infrastructure checks records after registry setup; it does not execute server commands."
 echo "Next (from the project root):"
 echo "  1) choose publication scope (personal default / shared) and harness type with your agent."
 echo "  2) in Claude Code, customize:     /praxis-init <one line about your project>"

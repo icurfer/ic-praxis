@@ -453,11 +453,16 @@ task commands cannot silently start in development mode.
 | Type | Current behavior | Guide |
 |---|---|---|
 | `development` | Existing task/check/validate/status workflow; checks in `config/project.json` | `harness/profiles/development/README.md` |
-| `infrastructure` | Integration placeholder; reference in `config/infrastructure.json`; operations not implemented | `harness/profiles/infrastructure/README.md` |
+| `infrastructure` | Registry-linked records, evidence checks and reconciliation; settings in `config/infrastructure.json`; no server execution | `harness/profiles/infrastructure/README.md` |
 
-The infrastructure workflow will be derived from a user-supplied operations
-project later. Selecting it does not execute development checks or activate
-operational commands. Both types keep CI off. Scripted selection after install:
+The infrastructure draft preserves existing operations rules and uses a user-chosen
+task registry. It detects missing task records, duplicate links, owner/status drift
+and unsupported completion claims against a fresh, complete registry snapshot.
+Plans, investigations and applied changes have different evidence requirements.
+It performs no live queries, remote task writes or server commands. See the
+[design and next-session scope](docs/architecture/infrastructure-harness.md) and
+[installed operations guide](templates/harness/profiles/infrastructure/README.md).
+Both types keep CI off. Scripted selection after install:
 
 ```bash
 node harness/bin/praxis.mjs profile select development
@@ -470,6 +475,15 @@ pre-profile installations select their type once after upgrade. Changing a selec
 type requires a reviewed migration; do not use `--force` as a type switch.
 The raw installer copies files and leaves selection to the agent/CLI, so piped
 installation does not require interactive terminal input.
+
+For infrastructure, configure the registry workflow and refresh its sanitized
+snapshot first, then use `task list`, `task init <id> --registry-id <existing-id>
+--kind investigation|plan|change`, `task validate <id>` and `task reconcile`.
+Records and evidence belong in `harness/operations/`; runtime snapshots stay in
+`.state/`. Personal/shared publication remains a separate choice. Older configs
+need reviewed code/procedure updates and new registry fields merged manually;
+normal reinstall preserves existing files and does not activate the new runner.
+A passing check means record consistency, not live health or authorization.
 
 ## Built-in task harness
 

@@ -440,11 +440,15 @@ bash scripts/configure-sharing.sh shared
 | 종류 | 현재 동작 | 안내 |
 |---|---|---|
 | `development` — 개발용 | 기존 작업 생성·조건 검사·검증·상태 조회. 검사 설정은 `config/project.json` | `harness/profiles/development/README.md` |
-| `infrastructure` — 인프라용 | 연동 준비만 제공. `config/infrastructure.json`에 참고 프로젝트 기록. 운영 실행 미구현 | `harness/profiles/infrastructure/README.md` |
+| `infrastructure` — 인프라용 | 외부 태스크와 연결한 기록·근거 검사·상태 대조. 설정은 `config/infrastructure.json`. 서버 실행 없음 | `harness/profiles/infrastructure/README.md` |
 
-인프라 절차는 나중에 사용자가 지정한 운영 프로젝트를 참고해 구현합니다. 인프라용을
-선택해도 개발용 검사나 운영 명령을 실행하지 않습니다. 두 종류 모두 CI는 기본으로
-꺼져 있습니다. 설치 후 직접 선택하는 명령은 다음과 같습니다.
+운영용 초안은 기존 운영 규약을 보존하고, 사용자가 지정한 태스크 관리처를 사용합니다.
+최신 전체 조회 결과와 대조해 작업 문서 누락·중복 연결·담당/상태 불일치·완료 근거
+부족을 찾습니다. 조사·계획·실제 변경은 각각 다른 완료 근거가 필요합니다.
+실시간 조회, 외부 태스크 변경, 서버 명령은 실행하지 않습니다.
+[설계와 다음 세션 범위](docs/architecture/infrastructure-harness.md),
+[운영용 안내](templates/harness/profiles/infrastructure/README.md)를 참고하세요.
+두 종류 모두 CI는 기본으로 꺼져 있습니다. 설치 후 직접 선택하는 명령은 다음과 같습니다.
 
 ```bash
 node harness/bin/praxis.mjs profile select development
@@ -457,6 +461,14 @@ node harness/bin/praxis.mjs profile status
 이전 계획을 검토한 후 진행해야 하며, `--force`를 유형 변경 용도로 사용하지 않습니다.
 설치 스크립트 자체는 파일을 복사하고 선택을 에이전트/CLI에 맡기므로, 파이프로 실행할
 때 터미널 입력을 요구하지 않습니다.
+
+운영용은 태스크 조회·변경 절차를 설정하고 민감정보를 제외한 조회 결과를 갱신한 뒤
+`task list`, `task init <id> --registry-id <기존-ID> --kind investigation|plan|change`,
+`task validate <id>`, `task reconcile`을 사용합니다. 작업 기록과 근거는
+`harness/operations/`, 임시 조회 결과는 `.state/`에 둡니다. 개인용/공통용 공개 범위는
+별도로 선택합니다. 일반 재설치는 기존 파일을 보존하므로 실행기·절차·새 관리처
+설정을 검토해 직접 병합해야 새 기능을 사용할 수 있습니다. 검사 통과는 기록 정합성이며
+실제 운영 정상이나 적용 승인이 아닙니다.
 
 ## 기본 작업 하네스
 

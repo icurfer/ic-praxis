@@ -13,6 +13,7 @@ back to the applied record rather than silently rewriting history.
 
 | Document | Status | Direction |
 |---|---|---|
+| [`applied/infrastructure-task-lifecycle.md`](applied/infrastructure-task-lifecycle.md) | Draft implementation (v0.10.1); consumer adoption deferred | Separate operations task linkage, evidence and reconciliation from development; next-session review before live adoption. |
 | [`applied/personal-publication-scope.md`](applied/personal-publication-scope.md) | Applied (v0.10.0) | Separate personal/shared publication scope from harness type; default delegated adoption to personal and guard staged private files. |
 | [`applied/ci-half-of-the-gate.md`](applied/ci-half-of-the-gate.md) | Applied (v0.7.0) | The gate ran only from per-clone local config — a fresh clone or `--no-verify` silently skipped it. Added a CI job that stages the change set and runs the **same** script. |
 | [`applied/dual-agent-claude-codex.md`](applied/dual-agent-claude-codex.md) | Increments 1–2 shipped in **v0.4.0–v0.5.0** (2026-07-25); rest deferred | Agent-neutral rules with thin Claude Code / Codex entrypoints. Shipped: `AGENTS.md` + **Gate E**, capability matrix, and native Codex discovery adapters in `.agents/skills/` for init/review/verify. Deferred: `.praxis/` core extraction, `--agent` installer flag, and Codex hook/sub-agent adapters. |

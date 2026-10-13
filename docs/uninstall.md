@@ -80,8 +80,10 @@ longer exist.
 ## 5. Remove the task harness (optional)
 
 Remove `harness/` and the `praxis-task` command/skill only if you no longer need
-task tracking. Back up any wanted local records under `harness/.state/` first:
-these are ignored and Git cannot restore them. Remove the `/harness/.state/`
+task tracking. Back up wanted local records under `harness/.state/` and durable
+operations records/evidence/index under `harness/operations/` first. In personal
+mode all are local and Git cannot restore them. Uninstalling does not delete or
+close tasks in the external registry. Remove the `/harness/.state/`
 ignore entry and the Task harness section from both constitution files together.
 The harness does not install global packages or change personal directories.
 If you opted into praxis CI separately, remove `.github/workflows/praxis-gate.yml`

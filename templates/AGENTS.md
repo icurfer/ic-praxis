@@ -68,9 +68,12 @@ code-plus-docs publication cycle. Shared scope still excludes runtime state.
 adoption, ask the user to choose development or infrastructure via `praxis-init`
 and persist it in `harness/config/profile.json`; honor an existing explicit choice.
 The development work order/change-size rules above apply only to development.
-For infrastructure, follow `harness/profiles/infrastructure/README.md`: reference
-integration is pending and operational execution is not implemented. Preserve
-existing operational rules; do not substitute the development flow.
+For infrastructure, follow `harness/profiles/infrastructure/README.md`: configure
+one task registry and its workflow, inspect existing tasks before creating work,
+and reconcile scope, ownership, completion evidence and handoff records. The CLI
+checks records against a fresh snapshot; it does not execute server commands or
+write to a registry. Preserve existing operational rules and authorization;
+do not substitute the development flow or equate a plan with applied changes.
 Use `praxis-task` to route requests by type. Development requires real checks and
 revalidation after code changes. CI stays off for both unless explicitly requested.
 

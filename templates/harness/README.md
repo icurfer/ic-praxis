@@ -53,8 +53,8 @@ Fresh installs have `profile: null` in `config/profile.json`. When you ask the
 agent to apply this harness, `praxis-init` asks you to choose:
 
 - **개발용 / development**: existing code tasks and test/build validation.
-- **인프라용 / infrastructure**: separate integration placeholder; operational
-  execution will be designed from a reference project supplied later.
+- **인프라용 / infrastructure**: registry-linked operations records, scope and
+  evidence checks, reconciliation and handoff. No server execution.
 
 ```bash
 node harness/bin/praxis.mjs profile select development
@@ -74,18 +74,23 @@ harness/
 ├── config/
 │   ├── profile.json          # selected type (null initially)
 │   ├── project.json          # development checks, existing format preserved
-│   └── infrastructure.json   # reference project and notes, no operations yet
+│   └── infrastructure.json   # chosen registry, workflow and snapshot settings
 ├── profiles/
 │   ├── development/README.md
 │   └── infrastructure/README.md
+├── operations/               # created on demand: durable tasks and generated index
 └── src/
     ├── main.mjs              # shared selection and routing
     ├── development.mjs       # development task implementation
+    ├── infrastructure.mjs    # operations record checks; no server commands
     └── run.mjs               # shared bounded command runner
 ```
 
-Infrastructure selection succeeds, but `profile status` returns 1 (pending) and
-all task commands remain blocked. Recording a reference does not enable execution.
+Infrastructure selection succeeds; `profile status` stays pending until a registry
+and workflow are configured. See [the operations guide](profiles/infrastructure/README.md)
+for `task list/init/check/validate/status/reconcile/index`, snapshot freshness,
+completion evidence and durable records outside `.state/`. A successful operations
+check does not prove live system health or grant permission to apply changes.
 Read only the selected guide under `profiles/`. The remaining command/check/record
 sections describe **development**; they do not define an infrastructure workflow.
 

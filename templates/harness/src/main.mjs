@@ -6,7 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const choices = ['development', 'infrastructure'];
 const selectionHelp = `하네스 종류를 선택하세요 / Select a harness profile:
   development     개발용: 코드 작업과 테스트·빌드 검증
-  infrastructure  인프라용: 참고 프로젝트 연동 준비 (운영 실행 미구현)
+  infrastructure  운영용: 외부 태스크 대조·범위·근거·인계 검사 (서버 실행 없음)
 
 node harness/bin/praxis.mjs profile select development
 node harness/bin/praxis.mjs profile select infrastructure
@@ -31,11 +31,11 @@ function readProfile() {
   }
   return value;
 }
-function report(profile) {
+async function report(profile) {
   if (profile === null) { console.log(selectionHelp); return 1; }
   if (profile === 'infrastructure') {
-    console.log('인프라용 선택됨 / infrastructure: pending implementation.\n참고 프로젝트를 harness/config/infrastructure.json에 기록하세요.\n다음 단계: harness/profiles/infrastructure/README.md — 운영 명령은 아직 실행할 수 없습니다.');
-    return 1;
+    const infrastructure = await import('./infrastructure.mjs');
+    return infrastructure.profileStatus();
   }
   console.log('개발용 선택됨 / development selected.\n작업별 검증은 별도입니다. / Task validation is separate.\nNext: node harness/bin/praxis.mjs task --help');
   return 0;
@@ -56,8 +56,8 @@ function select(profile) {
       fs.renameSync(lock, filename);
     }
   } finally { if (fs.existsSync(lock)) fs.unlinkSync(lock); }
-  report(profile);
-  return 0; // Selection succeeds; infrastructure readiness/status still fails.
+  console.log(`Selected ${profile}. Configuration and task readiness are checked separately with profile status.`);
+  return 0;
 }
 
 export async function main(args) {
@@ -68,12 +68,16 @@ export async function main(args) {
   }
   if (!args.length || ['--help', 'help'].includes(args[0])) {
     console.log(selectionHelp);
-    console.log('\nDevelopment tasks: task init / check / validate / status. After selecting development, use task --help.');
+    console.log('\nDevelopment: task init/check/validate/status. Infrastructure also provides task list/reconcile/index. After selection, use task --help.');
     return 0;
   }
   const profile = readProfile().profile;
-  if (profile !== 'development') return report(profile);
-  // Load only the selected implementation. Infrastructure never falls back here.
+  if (profile === null) return report(profile);
+  if (profile === 'infrastructure') {
+    const infrastructure = await import('./infrastructure.mjs');
+    return infrastructure.main(args);
+  }
+  // Load only the selected implementation. Development retains its own workflow.
   const development = await import('./development.mjs');
   if (args.length === 2 && args[0] === 'task' && args[1] === '--help') return development.main(['--help']);
   return development.main(args);

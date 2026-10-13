@@ -51,7 +51,7 @@ test('development runs existing tasks; reinstall preserves choice, checks and re
   assert.deepEqual(fs.readFileSync(task), before);
 });
 
-test('infrastructure stays pending and never executes development commands', t => {
+test('unconfigured infrastructure stays pending and never executes development commands', t => {
   const f = fixture(t, ['--ci']);
   assert.equal(fs.existsSync(path.join(f.root, '.github/workflows/praxis-gate.yml')), true);
   f.cli(['profile', 'select', 'infrastructure']);
@@ -59,9 +59,9 @@ test('infrastructure stays pending and never executes development commands', t =
   fs.writeFileSync(infra, JSON.stringify({ schemaVersion: 1, referenceProject: 'operations-reference', notes: '' }));
   fs.writeFileSync(path.join(f.root, 'harness/config/project.json'), JSON.stringify({ schemaVersion: 1, checks: [{ name: 'must not run', command: [process.execPath, '-e', "require('fs').writeFileSync('executed', 'bad')"], timeoutSeconds: 5 }] }));
   for (const action of ['init', 'check', 'validate', 'status']) {
-    assert.match(f.cli(['task', action, 'sample'], 1), /pending implementation/);
+    assert.match(f.cli(['task', action, 'sample'], 1), /Infrastructure setup pending/);
   }
-  assert.match(f.cli(['profile', 'status'], 1), /pending implementation/);
+  assert.match(f.cli(['profile', 'status'], 1), /Infrastructure setup pending/);
   assert.equal(fs.existsSync(path.join(f.root, 'executed')), false);
   assert.equal(fs.existsSync(path.join(f.root, 'harness/.state')), false);
   f.install();
@@ -84,4 +84,51 @@ test('malformed selection, concurrent lock and symlink fail without overwriting'
   fs.symlinkSync(outside, f.config);
   f.cli(['profile', 'select', 'development'], 1);
   assert.equal(fs.readFileSync(outside, 'utf8'), data);
+});
+
+test('installed operations lifecycle preserves records on reinstall and enforces publication boundaries', t => {
+  const f = fixture(t);
+  f.run('git', ['init', '-q']);
+  f.run('git', ['config', 'user.name', 'Test']);
+  f.run('git', ['config', 'user.email', 'test@example.invalid']);
+  f.run('bash', ['scripts/configure-sharing.sh', 'personal']);
+  f.run('git', ['add', '.']);
+  f.run('git', ['-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'fixture']);
+  f.run('bash', ['scripts/install-hooks.sh']);
+  f.cli(['profile', 'select', 'infrastructure']);
+  const write = (file, data) => {
+    fs.mkdirSync(path.dirname(path.join(f.root, file)), { recursive: true });
+    fs.writeFileSync(path.join(f.root, file), typeof data === 'string' ? data : JSON.stringify(data));
+  };
+  const registry = { name: 'Fixture tracker', scope: 'managed-operations' };
+  const settings = 'harness/config/infrastructure.json';
+  write(settings, { schemaVersion: 1, taskRegistry: { ...registry, workflow: 'harness/operations/workflow.md', snapshot: 'harness/.state/registry.json', maxAgeHours: 24 } });
+  write('harness/operations/workflow.md', 'Read complete scope using the chosen connector; review authorization before writes.');
+  const snapshot = { schemaVersion: 1, registry, observedAt: new Date().toISOString(), complete: true, tasks: [{ id: '1', title: 'Inspect example service', status: 'todo', assignee: null }] };
+  write('harness/.state/registry.json', snapshot);
+  f.cli(['task', 'init', 'service', '--registry-id', '1', '--kind', 'investigation']);
+  const file = 'harness/operations/tasks/service.json';
+  const task = JSON.parse(fs.readFileSync(path.join(f.root, file)));
+  task.scope = { request: 'Inspect service', targets: ['example-service'], allowed: ['read status'], excluded: ['apply'] };
+  task.status = 'done'; task.completion.summary = 'Requested inspection finished';
+  task.evidence = [{ kind: 'observation', path: 'harness/operations/result.md', observedAt: snapshot.observedAt, summary: 'Fixture result' }];
+  write('harness/operations/result.md', 'Simulated inspection result for this installer test.');
+  write(file, task); f.cli(['task', 'index']);
+  f.cli(['task', 'reconcile'], 1);
+  snapshot.tasks[0].status = 'done'; write('harness/.state/registry.json', snapshot);
+  f.cli(['task', 'validate', 'service']); f.cli(['task', 'reconcile']);
+  const preserved = [settings, file, 'harness/operations/INDEX.md', 'harness/operations/result.md', 'harness/.state/registry.json'].map(p => [p, fs.readFileSync(path.join(f.root, p))]);
+  f.install();
+  for (const [p, content] of preserved) assert.deepEqual(fs.readFileSync(path.join(f.root, p)), content);
+  f.cli(['task', 'reconcile']);
+  assert.equal(fs.existsSync(path.join(f.root, '.github/workflows')), false);
+  f.run('git', ['check-ignore', file]);
+  f.run('git', ['add', '-f', file]);
+  assert.match(f.run('git', ['commit', '-qm', 'must block private record'], 1), /Personal scaffold file staged/);
+  f.run('git', ['reset', '-q', 'HEAD', '--', file]);
+  f.run('bash', ['scripts/configure-sharing.sh', 'shared']);
+  f.run('git', ['add', 'harness/config/sharing', 'harness/operations']);
+  f.run('git', ['commit', '-qm', 'reviewed fixture records']);
+  f.run('git', ['add', '-f', 'harness/.state/registry.json']);
+  assert.match(f.run('git', ['commit', '-qm', 'must block runtime snapshot'], 1), /Local runtime record/);
 });

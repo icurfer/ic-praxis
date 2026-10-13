@@ -110,13 +110,28 @@ infrastructure FIRST (honor an existing explicit choice). Persist the choice in
 Expose `profile select development|infrastructure` and `profile status`.
 Keep a common router in `src/main.mjs`, development implementation in
 `src/development.mjs`, and separate guides in `profiles/development/` and
-`profiles/infrastructure/`. Only development implements `task init/check/validate/status`.
-Infrastructure is currently a pending integration placeholder: record the reference
-project in `config/infrastructure.json`, with no invented operational procedures,
-no development fallback and no operations execution. Stop infrastructure adoption
-after type/reference setup, preserving existing operational rules. Both types
-keep CI off. Preserve selections on normal reinstall; changing types needs a
-reviewed migration, not `--force`. Existing development checks/records stay in place.
+`profiles/infrastructure/`. Infrastructure uses `src/infrastructure.mjs` for record
+checks only: `task list/init/check/validate/status/reconcile/index`. Configure a
+user-chosen registry name, managed scope, workflow document, ignored snapshot path
+and freshness limit in `config/infrastructure.json`. Optional reference metadata
+stays generic. Missing config fails pending; there is no vendor default, live query,
+registry mutation or server execution. The configured connector supplies complete,
+sanitized, dated snapshots; reject stale/future/partial/wrong-scope or duplicate IDs.
+Link existing registry IDs before creating durable records under
+`harness/operations/tasks/`; preserve handwritten indexes and generate only the
+managed `operations/INDEX.md`. Reconcile missing records, duplicate links,
+owner/title/status drift, evidence and index freshness. Separate investigation,
+plan and change scopes. Done requires no remaining in-scope work, a summary and
+appropriate dated evidence; applied changes need permission and recovery references.
+Attributed user confirmation stays distinct from agent verification. Record checks
+are not proof of permission or live health. Agents inspect existing tasks first,
+use the chosen workflow for authorized registration/updates, refresh/read back,
+and reconcile before handoff. Do not bulk-close tasks or reopen completed history.
+Personal/shared scope covers durable operations records; snapshots stay local in
+both. Keep existing operations rules and hooks; do not apply the development
+sizing/version workflow. Both types keep CI off. Preserve selections/config/records
+on normal reinstall; changing types needs a reviewed migration, not `--force`.
+Existing development checks/records stay in place.
 The requirements below describe development, not infrastructure operations.
 Use a versioned JSON project config listing named executable argument arrays and
 timeouts. Start with no checks until real project commands are configured; empty
