@@ -415,7 +415,7 @@ existing choice takes precedence. This is separate from the harness type choice.
 
 | Scope | Harness and development records | Public user guides / changelogs |
 |---|---|---|
-| Personal (default) | Local only: `harness/`, `docs/requirements/`, `spec/`, `scope/`, `deferred/`, `done/` | May be committed |
+| Personal (default) | Local only: `harness/`, `docs/requirements/`, `spec/`, `scope/`, `deferred/`, `done/`, `adr/` | May be committed |
 | Project-shared (explicit opt-in) | Reviewed tools and documents may be committed | May be committed |
 
 ```bash
@@ -442,6 +442,39 @@ must integrate `scripts/check-sharing.sh`. CI remains off by default.
 Agent rules, shared memories and other scripts retain their existing publication
 policies; this is scoped exclusion, not a private copy of the entire repository.
 In ic-praxis itself, `templates/` stays versioned as the distributable product.
+
+## User-approved architectural decisions (ADR)
+
+An ADR records **what was decided and why**. Ask “propose an ADR for this design”
+or invoke `$praxis-adr` (Codex) / `/praxis-adr` (Claude Code). The agent explains
+options, a recommendation and consequences, then asks whether to adopt the
+concrete proposal. Routine edits need no ADR. This works for both harness types,
+even before type selection, without an external task service.
+
+```bash
+node harness/bin/praxis.mjs adr propose storage-choice --title "Storage choice"
+# Fill Context, Decision, Alternatives, Consequences in docs/adr/storage-choice.md
+node harness/bin/praxis.mjs adr check storage-choice
+# Present that content to the user; retain the reported SHA256.
+# Only after explicit acceptance, write sanitized approval evidence, then:
+node harness/bin/praxis.mjs adr accept storage-choice --by "User" --evidence docs/adr/evidence/storage-choice.md --reviewed-hash <sha256>
+node harness/bin/praxis.mjs adr check storage-choice
+node harness/bin/praxis.mjs adr list
+```
+
+The first proposal creates `docs/adr/`: Markdown for the decision, JSON for status
+and approval metadata, and an `evidence/` directory when approval is recorded.
+A draft stays **proposed** until explicit acceptance; a passing draft check is
+only a completeness check. Acceptance binds the reviewed document and evidence
+to SHA256 hashes. Later edits invalidate the record checks. Preserve accepted
+history; record a changed decision as a new ADR referencing the earlier one.
+The CLI records approval assertions, not authenticated human identity or semantic
+consent. The agent must obtain real approval; silence is not acceptance.
+
+`docs/adr/` including evidence stays local in personal mode and is guarded against
+force-added commits. Publication requires the existing explicit shared workflow.
+ADR acceptance does not itself authorize implementation, deployment or server
+operations. CI remains off. See the [canonical ADR procedure](templates/.claude/commands/praxis-adr.md).
 
 ## Harness type selection
 

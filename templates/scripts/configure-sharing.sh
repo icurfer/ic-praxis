@@ -44,7 +44,7 @@ rewrite() {
   fi
   if [ "$add" = yes ]; then
     printf '%s\n' "$BEGIN" >> "$TEMP"
-    printf '%s\n' '/harness/' '/docs/requirements/' '/docs/spec/' '/docs/scope/' '/docs/deferred/' '/docs/done/' >> "$TEMP"
+    printf '%s\n' '/harness/' '/docs/requirements/' '/docs/spec/' '/docs/scope/' '/docs/deferred/' '/docs/done/' '/docs/adr/' >> "$TEMP"
     printf '%s\n' "$END" >> "$TEMP"
   fi
   if [ -f "$file" ] && cmp -s "$file" "$TEMP"; then rm -f "$TEMP"; else mv "$TEMP" "$file"; fi
@@ -68,7 +68,7 @@ if [ "$MODE" = personal ]; then
   echo 'User guides and public changelogs remain eligible for commit.'
   if [ -z "$EXCLUDE" ]; then echo 'Using .gitignore fallback: Git metadata is absent or outside this target.'; fi
   if [ "$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null || true)" = "$ROOT" ]; then
-    TRACKED="$(git -C "$ROOT" ls-files -- harness docs/requirements docs/spec docs/scope docs/deferred docs/done)"
+    TRACKED="$(git -C "$ROOT" ls-files -- harness docs/requirements docs/spec docs/scope docs/deferred docs/done docs/adr)"
     if [ -n "$TRACKED" ]; then
       echo 'Already tracked: ignore rules cannot hide these. Review before untracking; history is unchanged.'
       printf '%s\n' "$TRACKED"

@@ -10,7 +10,7 @@ while IFS= read -r -d '' file; do
   case "$file" in
     harness/.state/*|harness/config/profile.json.lock)
       echo "Local runtime record must not be committed: $file" >&2; fail=1 ;;
-    harness/*|docs/requirements/*|docs/spec/*|docs/scope/*|docs/deferred/*|docs/done/*)
+    harness/*|docs/requirements/*|docs/spec/*|docs/scope/*|docs/deferred/*|docs/done/*|docs/adr/*)
       if [ "$MODE" = personal ]; then
         echo "Personal scaffold file staged: $file. Review publication scope with the user; do not force-add or auto-untrack." >&2
         fail=1

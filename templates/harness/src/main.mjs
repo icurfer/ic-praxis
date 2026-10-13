@@ -61,6 +61,7 @@ function select(profile) {
 }
 
 export async function main(args) {
+  if (args[0] === 'adr') return (await import('./adr.mjs')).main(args);
   if (args[0] === 'profile') {
     if (args[1] === 'select' && args.length === 3) return select(args[2]);
     if (args[1] === 'status' && args.length === 2) return report(readProfile().profile);
@@ -68,6 +69,7 @@ export async function main(args) {
   }
   if (!args.length || ['--help', 'help'].includes(args[0])) {
     console.log(selectionHelp);
+    console.log('Common decisions: adr propose/check/accept/list (adr --help).');
     console.log('\nDevelopment: task init/check/validate/status. Infrastructure also provides task list/reconcile/index. After selection, use task --help.');
     return 0;
   }

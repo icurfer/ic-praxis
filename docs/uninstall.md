@@ -80,7 +80,9 @@ longer exist.
 ## 5. Remove the task harness (optional)
 
 Remove `harness/` and the `praxis-task` command/skill only if you no longer need
-task tracking. Back up wanted local records under `harness/.state/` and durable
+task tracking. Remove `praxis-adr` command/skill if no longer needed; back up
+`docs/adr/` decisions, status records and approval evidence before any deletion.
+Back up wanted local records under `harness/.state/` and durable
 operations records/evidence/index under `harness/operations/` first. In personal
 mode all are local and Git cannot restore them. Uninstalling does not delete or
 close tasks in the external registry. Remove the `/harness/.state/`

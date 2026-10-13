@@ -33,9 +33,16 @@ never slip back. Rules that rely on human memory eventually break again.
 
 ## Publication
 
-`requirements/`, `spec/`, `scope/`, `deferred/` and `done/` are local by default
+`requirements/`, `spec/`, `scope/`, `deferred/`, `done/` and `adr/` are local by default
 under personal publication scope. Creating or completing these records does not
 mean committing them. User guides and public changelogs remain publishable.
 Choose project-shared scope explicitly after reviewing the actual contents;
 otherwise publish only a curated summary outside the private directories.
 See `../harness/README.md` and `scripts/configure-sharing.sh` at the repository root.
+
+## Architectural decisions
+
+Ask the agent to propose an ADR, or use `$praxis-adr` / `/praxis-adr`. The first
+proposal creates `adr/<id>.md` and its status record `adr/<id>.json`; approved
+evidence lives in `adr/evidence/`. Drafts remain proposed until the user explicitly
+accepts the reviewed content. Both harness profiles use the same procedure.

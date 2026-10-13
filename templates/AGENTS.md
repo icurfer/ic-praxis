@@ -55,7 +55,7 @@ At adoption, ask personal or project-shared, independently of harness type.
 If the user delegates with "apply appropriately" or equivalent, default to
 personal; preserve an explicit existing choice. `harness/config/sharing` records
 personal/shared. Personal keeps `harness/` and `docs/requirements`, `spec`, `scope`,
-`deferred`, `done` local. User guides and public changelogs may be committed.
+`deferred`, `done`, `adr` local. User guides and public changelogs may be committed.
 Use `scripts/configure-sharing.sh`; never force-add private files or interpret a
 generic push request as approval to publish them. Review the actual contents
 before a shared transition. No automatic untracking or history rewriting.
@@ -76,6 +76,17 @@ write to a registry. Preserve existing operational rules and authorization;
 do not substitute the development flow or equate a plan with applied changes.
 Use `praxis-task` to route requests by type. Development requires real checks and
 revalidation after code changes. CI stays off for both unless explicitly requested.
+
+## Architectural decisions
+
+For a durable architectural choice or an explicit ADR request, follow
+`.claude/commands/praxis-adr.md` (Codex: `$praxis-adr`). Draft the context,
+decision, alternatives and consequences, present them to the user and record
+explicit approval of that exact content before accepting. Do not infer approval
+from silence or fabricate evidence. This applies to both harness types. ADR
+acceptance does not itself authorize execution or publication. Preserve accepted
+history and create a linked new ADR for a changed decision. `docs/adr/` is local
+under personal scope; `adr check` tests records, not authentic user consent.
 
 ## Automated gate
 The mechanically-checkable rules above are enforced at commit time by

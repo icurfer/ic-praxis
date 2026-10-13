@@ -403,7 +403,7 @@ AI에게 “적절히 적용해줘”처럼 판단을 맡기면 **개인용을 �
 
 | 범위 | 하네스와 개발 기록 | 공개 사용 가이드·변경 이력 |
 |---|---|---|
-| 개인용(기본) | `harness/`, `docs/requirements/`, `spec/`, `scope/`, `deferred/`, `done/`을 로컬에 유지 | 커밋 가능 |
+| 개인용(기본) | `harness/`, `docs/requirements/`, `spec/`, `scope/`, `deferred/`, `done/`, `adr/`을 로컬에 유지 | 커밋 가능 |
 | 프로젝트 공통용(명시적 선택) | 검토한 도구·문서를 커밋 가능 | 커밋 가능 |
 
 ```bash
@@ -429,6 +429,38 @@ bash scripts/configure-sharing.sh shared
 에이전트 규약·공유 메모리·기타 스크립트는 기존 공개 정책을 유지합니다. 이 설정은
 저장소 전체를 비공개로 만드는 기능이 아닙니다. ic-praxis 자체의 `templates/`는 계속
 배포 원본으로 버전 관리합니다.
+
+## 사용자 승인 기반 설계 결정 기록(ADR)
+
+ADR은 **무엇을 왜 결정했는지** 남기는 문서입니다. “이 설계를 ADR로 제안해줘”라고
+요청하거나 Codex의 `$praxis-adr`, Claude Code의 `/praxis-adr`를 사용하세요.
+AI가 대안·권장안·영향을 설명하고 구체적인 초안을 채택할지 사용자에게 묻습니다.
+일상적인 수정마다 ADR이 필요한 것은 아닙니다. 개발·인프라 공통 기능이며,
+하네스 종류를 선택하기 전에도 외부 태스크 서비스 없이 사용할 수 있습니다.
+
+```bash
+node harness/bin/praxis.mjs adr propose storage-choice --title "저장소 선택"
+# docs/adr/storage-choice.md의 Context, Decision, Alternatives, Consequences 작성
+node harness/bin/praxis.mjs adr check storage-choice
+# 이 내용을 사용자에게 보여주고 출력된 SHA256을 보관합니다.
+# 명시적으로 승인받은 뒤 민감정보 없는 승인 근거를 작성하고 실행합니다.
+node harness/bin/praxis.mjs adr accept storage-choice --by "사용자" --evidence docs/adr/evidence/storage-choice.md --reviewed-hash <sha256>
+node harness/bin/praxis.mjs adr check storage-choice
+node harness/bin/praxis.mjs adr list
+```
+
+첫 제안 시 `docs/adr/`에 결정 본문 Markdown과 상태·승인 메타데이터 JSON이 생기며,
+승인 기록 시 `evidence/`에 근거를 남깁니다. 초안은 명시적 승인 전까지 **proposed**이며,
+초안 검사 통과는 필수 항목 작성 확인입니다. 승인 시 검토한 본문과 근거의 SHA256을
+기록하고 이후 내용이 바뀌면 검사에 실패합니다. 승인된 이력은 보존하고, 결정을
+바꿀 때는 이전 ADR을 참조하는 새 ADR을 작성합니다. CLI는 승인 기록의 일관성을
+검사하며 실제 사용자 신원이나 동의의 진위를 인증하지 않습니다. AI가 실제 승인을
+받아야 하며 무응답을 승인으로 처리하지 않습니다.
+
+개인용에서는 승인 근거를 포함한 `docs/adr/`을 로컬에 유지하고 강제 추가 커밋도
+검사합니다. 공개하려면 기존 공통용 전환 절차에서 명시적으로 선택해야 합니다.
+ADR 승인 자체가 구현·배포·서버 조작을 허가하지는 않습니다. CI는 계속 기본 꺼짐입니다.
+[ADR 처리 절차](templates/.claude/commands/praxis-adr.md)를 참고하세요.
 
 ## 하네스 종류 선택
 

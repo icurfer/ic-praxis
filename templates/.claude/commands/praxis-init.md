@@ -16,7 +16,7 @@ Do this:
 **Choose publication scope before customization.** This is separate from harness
 type. Ask: "개인용으로 로컬에서만 사용할까요, 프로젝트 공통 도구로 공유할까요?"
 Explain that personal excludes `harness/` and `docs/requirements`, `spec`, `scope`,
-`deferred`, `done`; user guides and public changelogs may be committed.
+`deferred`, `done`, `adr`; user guides and public changelogs may be committed.
 If the user says "적절히 적용해줘" / "use your judgment" or delegates AI setup
 without specifying publication, use **personal** and state that choice instead
 of blocking on a question. An explicit previous choice takes precedence; preserve
@@ -175,3 +175,8 @@ existing workflows; if praxis CI already exists, explain that it remains active.
 
 Principle to preserve: the gate exists so retros become enforcement. Don't water
 it down — tune it to fire on THIS project's real mistakes.
+
+For durable architectural decisions during adoption, follow `praxis-adr` to
+present a concrete proposal and obtain explicit user acceptance before recording
+it as accepted. This is optional for routine setup and works for both profiles.
+ADR documents and approval evidence in `docs/adr/` are personal by default.

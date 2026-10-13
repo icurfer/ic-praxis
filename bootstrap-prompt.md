@@ -9,7 +9,7 @@ First ask whether adoption is personal or project-shared. If the user delegates
 with "apply appropriately" / "use your judgment", default to personal and state
 the choice; honor existing explicit choices. This is independent of harness type.
 Default installation protects `harness/` and `docs/requirements`, `spec`, `scope`,
-`deferred`, `done` locally, leaving public guides/changelogs eligible for commit.
+`deferred`, `done`, `adr` locally, leaving public guides/changelogs eligible for commit.
 Use a managed `.git/info/exclude` block, or a managed `.gitignore` fallback when
 Git is absent or metadata is outside the target; never write outside the target.
 Provide `scripts/configure-sharing.sh personal|shared` and persist the selection
@@ -180,3 +180,23 @@ they do not prove that every domain-specific assumption has been removed.
 Use `bash scripts/check-index-clean.sh <pathspec>...` before execution-based
 commit checks. It rejects unstaged or untracked inputs without changing files.
 Ignored dependencies are outside this check; install them from lockfiles.
+
+## User-approved ADR workflow
+
+Ship a common `adr propose/check/accept/list` CLI, independent of profile selection,
+with `.claude/commands/praxis-adr.md` as the canonical procedure and a thin
+`.agents/skills/praxis-adr/SKILL.md` adapter. Use `docs/adr/<id>.md` with Context,
+Decision, Alternatives, Consequences and `<id>.json` for proposed/accepted state.
+Ask the user about meaningful architectural choices, presenting alternatives and
+consequences before acceptance. Require real explicit approval of the reviewed
+content; silence is not consent. Preserve existing explicit approval without
+asking again. Bind acceptance to a required reviewed SHA256 and separate sanitized
+local evidence, approver and timestamp; reject stale hashes, incomplete sections,
+unsafe paths, symlinks and overwrites. Lock writers; validate accepted body and
+evidence hashes. State clearly that these are approval assertions, not identity
+authentication. Preserve accepted history and link a new ADR for a new decision.
+Keep all `docs/adr/` files personal by default, including evidence; include them in
+the exclusion helper and staged publication gate. ADR adoption grants no new
+implementation, deployment, server-action or publication permission. Keep CI off.
+Verify the complete proposal/approval/change-detection flow and personal/shared
+commit behavior in an installed disposable target.

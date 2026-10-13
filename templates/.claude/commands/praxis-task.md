@@ -13,6 +13,10 @@ Sharing requires explicit user choice after reviewing what will be published;
 follow the publication step in `praxis-init`. Do not treat development completion
 as a reason to switch scope. Public guides/curated summaries can be committed.
 
+For a significant unresolved architectural choice, follow `praxis-adr` to
+present options and obtain explicit acceptance. Routine edits need no ADR.
+Continue independent authorized work while a decision is pending.
+
 Then read `harness/config/profile.json`. If the type is unset, follow the type
 selection step in `.claude/commands/praxis-init.md` before creating any task.
 If it is `infrastructure`, follow the operations branch below. Only `development`
